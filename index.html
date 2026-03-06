@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Bubble Bloom</title>
+  <title>현서를 위한 Bubble Bloom</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
@@ -31,10 +31,11 @@
       <section class="board-stage" id="boardStage">
         <div class="board-header">
           <div>
-            <p class="eyebrow">Color Match Shooter</p>
-            <h1>Bubble Bloom</h1>
+            <p class="eyebrow">Made For 현서</p>
+            <h1>현서의 Bubble Bloom</h1>
+            <p class="dedication-chip">현서를 위한 커스텀 에디션</p>
           </div>
-          <p class="board-tip">누르고 조준한 뒤 손을 떼면 발사됩니다.</p>
+          <p class="board-tip">현서, 벽 반사로 숨은 각도까지 노려봐요.</p>
         </div>
 
         <div class="canvas-frame">
@@ -48,18 +49,19 @@
 
           <div class="overlay-screen overlay-active" id="titleScreen" aria-live="polite">
             <div class="overlay-card title-card">
-              <p class="overlay-kicker">첫 바이브 코딩 게임</p>
-              <h2>Bubble Bloom</h2>
+              <p class="overlay-kicker">현서를 위한 커스텀 게임</p>
+              <h2>현서의 Bubble Bloom</h2>
               <p class="overlay-copy">
-                같은 색 버블을 3개 이상 붙여 터뜨리고, 천장과 끊긴 버블까지 한 번에 떨어뜨리세요.
+                현서가 직접 플레이하면서 자기 이름과 응원 메시지를 만날 수 있는 전용 버블 슈터예요.
+                같은 색 버블을 3개 이상 붙여 터뜨리고, 끊긴 버블까지 시원하게 떨어뜨려보세요.
               </p>
               <ul class="overlay-list">
-                <li>색상은 5가지, 다음 버블은 항상 미리 보입니다.</li>
-                <li>12초마다 벽이 내려오고, 5번 연속 실패하면 추가 하강합니다.</li>
-                <li>위험선을 넘기기 전에 화면의 버블을 전부 지우면 클리어입니다.</li>
+                <li>현서 전용 스테이지 이름과 상태 메시지가 계속 따라옵니다.</li>
+                <li>색상은 5가지, 다음 버블은 항상 미리 보여 전략적으로 노릴 수 있어요.</li>
+                <li>위험선을 넘기기 전에 모든 버블을 지우면 현서의 스테이지 클리어입니다.</li>
               </ul>
               <div class="overlay-actions">
-                <button class="primary-button" id="startGameButton" type="button">게임 시작</button>
+                <button class="primary-button" id="startGameButton" type="button">현서의 게임 시작</button>
               </div>
             </div>
           </div>
@@ -84,7 +86,8 @@
             <div class="slot-bubble slot-bubble-large" id="currentBubblePreview"></div>
           </div>
           <div class="launcher-center">
-            <span class="launcher-status" id="statusText">시작 버튼을 누르면 스테이지 1이 열립니다.</span>
+            <span class="stage-flavor" id="stageFlavorText">현서 전용 스테이지가 준비 중이에요.</span>
+            <span class="launcher-status" id="statusText">현서, 시작 버튼을 누르면 첫 스테이지가 열려요.</span>
             <div class="meter-row">
               <span>다음 하강</span>
               <div class="meter-track">

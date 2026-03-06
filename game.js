@@ -20,6 +20,7 @@
   const currentBubblePreview = document.getElementById("currentBubblePreview");
   const nextBubblePreview = document.getElementById("nextBubblePreview");
   const statusText = document.getElementById("statusText");
+  const stageFlavorText = document.getElementById("stageFlavorText");
   const descentMeter = document.getElementById("descentMeter");
   const boardStage = document.getElementById("boardStage");
 
@@ -46,6 +47,21 @@
 
   const BUBBLE_DIAMETER = CONFIG.bubbleRadius * 2;
   const GRID_START_X = (CONFIG.viewWidth - (CONFIG.columns * BUBBLE_DIAMETER + CONFIG.bubbleRadius)) / 2 + CONFIG.bubbleRadius;
+  const PLAYER_NAME = "\uD604\uC11C";
+  const STAGE_THEMES = [
+    "\uC6CC\uBC0D\uC5C5 \uB77C\uC6B4\uB4DC",
+    "\uC9D1\uC911\uB825 \uC2A4\uD30C\uD06C",
+    "\uBC18\uC0AC \uAC01\uB3C4 \uC1FC\uD0C0\uC784",
+    "\uBC84\uBE14 \uD30C\uD2F0",
+    "\uD074\uB7EC\uCE58 \uCC4C\uB9B0\uC9C0",
+    "\uD558\uC774\uB77C\uC774\uD2B8 \uD53C\uB0A0\uB808",
+  ];
+  const MISS_LINES = [
+    "\uC774\uBC88 \uC0F7\uC740 \uC544\uC27D\uC9C0\uB9CC \uC544\uC9C1 \uD750\uB984\uC740 \uC0B4\uC544 \uC788\uC5B4\uC694.",
+    "\uAC01\uB3C4\uB97C \uC870\uAE08\uB9CC \uB354 \uB2E4\uB4EC\uC73C\uBA74 \uBC14\uB85C \uD130\uC9C8 \uAC83 \uAC19\uC544\uC694.",
+    "\uB2E4\uC74C \uD55C \uBC1C\uC774 \uD604\uC11C\uC758 \uD558\uC774\uB77C\uC774\uD2B8\uAC00 \uB420 \uC218\uB3C4 \uC788\uC5B4\uC694.",
+  ];
+
 
   const state = {
     mode: "title",
@@ -167,6 +183,24 @@
     return randomFrom(getExistingColors());
   }
 
+  function getStageTheme(stage) {
+    return STAGE_THEMES[(stage - 1) % STAGE_THEMES.length];
+  }
+
+  function getStageLabel(stage) {
+    return `${PLAYER_NAME}의 ${getStageTheme(stage)}`;
+  }
+
+  function getComboCheer(combo) {
+    if (combo >= 5) {
+      return `${PLAYER_NAME} 하이라이트!`;
+    }
+    if (combo >= 3) {
+      return `${PLAYER_NAME} 콤보 타임!`;
+    }
+    return `${PLAYER_NAME} 리듬 좋아요!`;
+  }
+
   function hideOverlay(element) {
     element.classList.remove("overlay-active");
   }
@@ -194,6 +228,12 @@
     stageValue.textContent = `${state.stage}`;
     pauseButton.disabled = state.mode === "title";
     pauseButton.textContent = state.mode === "paused" ? "계속하기" : "일시정지";
+
+    if (stageFlavorText) {
+      stageFlavorText.textContent = state.mode === "title"
+        ? `${PLAYER_NAME} \uC804\uC6A9 \uC2A4\uD14C\uC774\uC9C0\uAC00 \uC900\uBE44 \uC911\uC774\uC5D0\uC694.`
+        : `\uD604\uC7AC \uD14C\uB9C8: ${getStageLabel(state.stage)}`;
+    }
 
     const descentProgress = state.mode === "title"
       ? 0
@@ -277,7 +317,8 @@
     checkDangerState();
     updateHud();
     updateLauncherPreview();
-    updateStatus("손가락이나 마우스로 조준한 뒤 놓아서 발사하세요.");
+    addPopup(getStageLabel(stage), CONFIG.launcherX, 138, "#ffd166");
+    updateStatus(`${PLAYER_NAME}, ${getStageTheme(stage)} \uC2DC\uC791! \uCCAB \uBC84\uBE14\uC744 \uC2DC\uC6D0\uD558\uAC8C \uC3F4\uBCF4\uC138\uC694.`);
   }
 
   function togglePause() {
@@ -287,16 +328,16 @@
     if (state.mode === "paused") {
       state.mode = "playing";
       hideOverlay(stateScreen);
-      updateStatus("플레이가 재개되었습니다.");
+      updateStatus(`${PLAYER_NAME}, \uB2E4\uC2DC \uBC84\uBE14\uC1FC \uC2DC\uC791!`);
       updateHud();
       return;
     }
     state.mode = "paused";
     state.aiming = false;
     showOverlay({
-      kicker: "일시정지",
-      title: "잠깐 숨 고르기",
-      message: "준비되면 이어서 플레이할 수 있어요.",
+      kicker: `${PLAYER_NAME} \uC804\uC6A9 \uBA54\uB274`,
+      title: `${PLAYER_NAME}\uC758 \uC7A0\uAE50 \uC228 \uACE0\uB974\uAE30`,
+      message: `${PLAYER_NAME}, \uC228\uC744 \uACE0\uB978 \uB4A4 \uB2E4\uC2DC \uC774\uC5B4\uAC00\uBA74 \uB3FC\uC694.`,
       primaryLabel: "계속하기",
       primaryAction: "resume",
       secondaryLabel: "다시하기",
@@ -368,7 +409,7 @@
     state.nextBubble = createBubble(pickBubbleColor());
     state.aiming = false;
     updateLauncherPreview();
-    updateStatus("버블이 발사되었습니다. 다음 수를 준비하세요.");
+    updateStatus(`${PLAYER_NAME}, \uBC84\uBE14 \uBC1C\uC0AC \uC644\uB8CC! \uB2E4\uC74C \uAC01\uB3C4\uB97C \uC77D\uC5B4\uBD10\uC694.`);
   }
 
   function getCanvasCoordinates(event) {
@@ -563,15 +604,15 @@
       }
       state.mode = "clear";
       showOverlay({
-        kicker: "Stage Clear",
-        title: `스테이지 ${state.stage} 클리어`,
-        message: `현재 점수는 ${state.score.toLocaleString("ko-KR")}점입니다. 다음 스테이지로 이어갈까요?`,
-        primaryLabel: "다음 스테이지",
+        kicker: `${PLAYER_NAME} Clear`,
+        title: `${getStageLabel(state.stage)} \uC644\uB8CC`,
+        message: `${PLAYER_NAME}, \uD604\uC7AC \uC810\uC218\uB294 ${state.score.toLocaleString("ko-KR")}\uC810\uC774\uC5D0\uC694. \uB2E4\uC74C \uC2A4\uD14C\uC774\uC9C0\uC5D0\uC11C\uB3C4 \uBC84\uBE14\uC1FC\uB97C \uC774\uC5B4\uAC08\uAE4C\uC694?`,
+        primaryLabel: "\uB2E4\uC74C \uC2A4\uD14C\uC774\uC9C0",
         primaryAction: "nextStage",
-        secondaryLabel: "다시하기",
+        secondaryLabel: "\uB2E4\uC2DC\uD558\uAE30",
         secondaryAction: "restart",
       });
-      updateStatus("스테이지를 클리어했습니다.");
+      updateStatus(`${PLAYER_NAME}, \uC2A4\uD14C\uC774\uC9C0\uB97C \uD074\uB9AC\uC5B4\uD588\uC5B4\uC694!`);
       updateHud();
     }, 320);
   }
@@ -590,15 +631,15 @@
     state.aiming = false;
     triggerShake();
     showOverlay({
-      kicker: "Game Over",
-      title: "위험선을 넘겼어요",
-      message: `최종 점수 ${state.score.toLocaleString("ko-KR")}점, 도달 스테이지 ${state.stage}. 다시 도전해볼까요?`,
-      primaryLabel: "다시하기",
+      kicker: `${PLAYER_NAME} Retry`,
+      title: `${PLAYER_NAME}, \uD55C \uD310 \uB354 \uB3C4\uC804\uD574\uBCFC\uAE4C\uC694?`,
+      message: `\uCD5C\uC885 \uC810\uC218 ${state.score.toLocaleString("ko-KR")}\uC810, \uB3C4\uB2EC \uC2A4\uD14C\uC774\uC9C0 ${state.stage}. \uB2E4\uC74C \uD310\uC5D0\uC11C\uB294 \uB354 \uBA4B\uC9C4 \uAC01\uB3C4\uAC00 \uB098\uC62C \uAC70\uC608\uC694.`,
+      primaryLabel: "\uB2E4\uC2DC\uD558\uAE30",
       primaryAction: "restart",
-      secondaryLabel: "처음부터",
+      secondaryLabel: "\uCC98\uC74C\uBD80\uD130",
       secondaryAction: "newGame",
     });
-    updateStatus("버블 벽이 위험선을 넘었습니다.");
+    updateStatus(`${PLAYER_NAME}, \uC774\uBC88 \uB77C\uC6B4\uB4DC\uB294 \uC5EC\uAE30\uAE4C\uC9C0\uC608\uC694. \uB2E4\uC2DC \uC2DC\uC791\uD574\uBCFC\uAE4C\uC694?`);
     updateHud();
   }
 
@@ -640,11 +681,11 @@
     const matched = collectConnectedSameColor(cell.row, cell.col);
     if (matched.length >= 3) {
       const matchedCount = matched.length;
-      removeBubbles(matched, `${matchedCount} Match`);
+      removeBubbles(matched, `${matchedCount}\uAC1C \uBC84\uBE14 \uD321`);
       const floating = collectFloatingBubbles();
       const floatingCount = floating.length;
       if (floatingCount > 0) {
-        removeBubbles(floating, `${floatingCount} Drop`);
+        removeBubbles(floating, `${floatingCount}\uAC1C \uBC84\uBE14 \uB099\uD558`);
       }
 
       state.combo += 1;
@@ -655,21 +696,21 @@
       addPopup(`+${gainedScore}`, CONFIG.launcherX, CONFIG.launcherY - 86, "#7cf5d6");
       updateStatus(
         floatingCount > 0
-          ? `${matchedCount}개 매치, ${floatingCount}개 낙하. 콤보 ${state.combo}!`
-          : `${matchedCount}개 버블을 제거했습니다. 콤보 ${state.combo}!`
+          ? `${PLAYER_NAME}, ${matchedCount}\uAC1C \uB9E4\uCE58\uC5D0 ${floatingCount}\uAC1C \uB099\uD558! \uCF64\uBCF4 ${state.combo}!`
+          : `${PLAYER_NAME}, ${matchedCount}\uAC1C \uBC84\uBE14\uC744 \uC81C\uAC70\uD588\uC5B4\uC694. \uCF64\uBCF4 ${state.combo}!`
       );
       if (state.combo > 1) {
-        addPopup(`Combo x${state.combo}`, CONFIG.launcherX, CONFIG.launcherY - 120, "#ffd166");
+        addPopup(getComboCheer(state.combo), CONFIG.launcherX, CONFIG.launcherY - 120, "#ffd166");
       }
     } else {
       state.combo = 0;
       state.missStreak += 1;
-      updateStatus(`매치 실패 ${state.missStreak}/${CONFIG.missLimit}. 다음 버블로 다시 노려보세요.`);
+      updateStatus(`${PLAYER_NAME}, ${randomFrom(MISS_LINES)} \uB9E4\uCE58 \uC2E4\uD328 ${state.missStreak}/${CONFIG.missLimit}.`);
       if (state.missStreak >= CONFIG.missLimit) {
         state.missStreak = 0;
         descendBoard(CONFIG.descendPenaltyStep, true);
         addPopup("Pressure Drop", CONFIG.launcherX, CONFIG.dangerLineY - 32, "#ff8f8f");
-        updateStatus("5번 연속 실패로 벽이 추가 하강했습니다.");
+        updateStatus(`${PLAYER_NAME}, 5\uBC88 \uC5F0\uC18D \uC2E4\uD328\uB85C \uBCBD\uC774 \uB354 \uB0B4\uB824\uC654\uC5B4\uC694. \uB2E4\uC2DC \uB9AC\uB4EC\uC744 \uC7A1\uC544\uBD10\uC694.`);
       }
     }
 
@@ -744,7 +785,7 @@
     state.descendElapsed += dt * 1000;
     if (state.descendElapsed >= CONFIG.descendIntervalMs) {
       descendBoard(CONFIG.descendHalfStep);
-      updateStatus("시간 경과로 버블 벽이 내려왔습니다.");
+      updateStatus(`${PLAYER_NAME}, \uC2DC\uAC04\uC774 \uC9C0\uB098 \uBC84\uBE14 \uBCBD\uC774 \uC870\uAE08 \uB0B4\uB824\uC654\uC5B4\uC694.`);
     }
 
     stepProjectile(dt);
@@ -814,6 +855,23 @@
     ctx.beginPath();
     ctx.arc(CONFIG.launcherX, CONFIG.launcherY + 22, 46, Math.PI, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
+  }
+
+  function drawDedicationStamp() {
+    ctx.save();
+    ctx.fillStyle = "rgba(124, 245, 214, 0.14)";
+    roundRect(ctx, CONFIG.fieldLeft + 14, 34, 166, 46, 16);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(124, 245, 214, 0.34)";
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+    ctx.fillStyle = "rgba(124, 245, 214, 0.94)";
+    ctx.font = "700 13px Trebuchet MS";
+    ctx.fillText(`${PLAYER_NAME} CUSTOM`, CONFIG.fieldLeft + 28, 54);
+    ctx.fillStyle = "rgba(255, 255, 255, 0.78)";
+    ctx.font = "700 11px Trebuchet MS";
+    ctx.fillText(getStageTheme(state.stage), CONFIG.fieldLeft + 28, 71);
     ctx.restore();
   }
 
@@ -966,12 +1024,13 @@
     ctx.save();
     ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
     ctx.font = "700 14px Trebuchet MS";
-    ctx.fillText(`연속 실패 ${state.missStreak}/${CONFIG.missLimit}`, CONFIG.fieldLeft + 18, CONFIG.launcherY - 30);
+    ctx.fillText(`${PLAYER_NAME}\uC758 \uC2E4\uC218 ${state.missStreak}/${CONFIG.missLimit}`, CONFIG.fieldLeft + 18, CONFIG.launcherY - 30);
     ctx.restore();
   }
 
   function render() {
     drawBackground();
+    drawDedicationStamp();
     drawAimGuide();
     drawBoardBubbles();
     drawLauncher();
@@ -998,7 +1057,7 @@
       case "resume":
         hideOverlay(stateScreen);
         state.mode = "playing";
-        updateStatus("플레이를 다시 시작합니다.");
+        updateStatus(`${PLAYER_NAME}, \uB2E4\uC2DC \uBC84\uBE14\uC1FC \uC2DC\uC791!`);
         break;
       case "restart":
         resetRun(state.stage);
@@ -1054,7 +1113,7 @@
     boardStage.classList.remove("warning", "shake");
     showElement(titleScreen);
     hideOverlay(stateScreen);
-    updateStatus("시작 버튼을 누르면 스테이지 1이 열립니다.");
+    updateStatus(`${PLAYER_NAME}, \uC2DC\uC791 \uBC84\uD2BC\uC744 \uB204\uB974\uBA74 \uCCAB \uC2A4\uD14C\uC774\uC9C0\uAC00 \uC5F4\uB824\uC694.`);
     updateHud();
     updateLauncherPreview();
   }
