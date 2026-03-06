@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>현서를 위한 Bubble Bloom</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
@@ -11,7 +11,7 @@
   <div class="page-glow page-glow-right" aria-hidden="true"></div>
 
   <main class="app-shell" id="appShell">
-    <section class="game-card">
+    <section class="game-card" id="gameCard">
       <header class="hud">
         <div class="hud-item">
           <span class="hud-label">점수</span>
@@ -29,7 +29,7 @@
       </header>
 
       <section class="board-stage" id="boardStage">
-        <div class="board-header">
+        <div class="board-header" id="boardHeader">
           <div>
             <p class="eyebrow">Made For 현서</p>
             <h1>현서의 Bubble Bloom</h1>
@@ -38,7 +38,7 @@
           <p class="board-tip">현서, 벽 반사로 숨은 각도까지 노려봐요.</p>
         </div>
 
-        <div class="canvas-frame">
+        <div class="canvas-frame" id="canvasFrame">
           <canvas
             id="gameCanvas"
             class="game-canvas"
@@ -80,7 +80,7 @@
           </div>
         </div>
 
-        <section class="launcher-panel">
+        <section class="launcher-panel" id="launcherPanel">
           <div class="launcher-slot">
             <span class="slot-label">현재 버블</span>
             <div class="slot-bubble slot-bubble-large" id="currentBubblePreview"></div>

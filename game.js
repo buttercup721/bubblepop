@@ -23,6 +23,12 @@
   const stageFlavorText = document.getElementById("stageFlavorText");
   const descentMeter = document.getElementById("descentMeter");
   const boardStage = document.getElementById("boardStage");
+  const appShell = document.getElementById("appShell");
+  const gameCard = document.getElementById("gameCard");
+  const boardHeader = document.getElementById("boardHeader");
+  const canvasFrame = document.getElementById("canvasFrame");
+  const launcherPanel = document.getElementById("launcherPanel");
+  const hud = document.querySelector(".hud");
 
   const CONFIG = {
     viewWidth: 420,
@@ -56,12 +62,17 @@
     "\uD074\uB7EC\uCE58 \uCC4C\uB9B0\uC9C0",
     "\uD558\uC774\uB77C\uC774\uD2B8 \uD53C\uB0A0\uB808",
   ];
+  const FINAL_STAGE = STAGE_THEMES.length;
   const MISS_LINES = [
     "\uC774\uBC88 \uC0F7\uC740 \uC544\uC27D\uC9C0\uB9CC \uC544\uC9C1 \uD750\uB984\uC740 \uC0B4\uC544 \uC788\uC5B4\uC694.",
     "\uAC01\uB3C4\uB97C \uC870\uAE08\uB9CC \uB354 \uB2E4\uB4EC\uC73C\uBA74 \uBC14\uB85C \uD130\uC9C8 \uAC83 \uAC19\uC544\uC694.",
     "\uB2E4\uC74C \uD55C \uBC1C\uC774 \uD604\uC11C\uC758 \uD558\uC774\uB77C\uC774\uD2B8\uAC00 \uB420 \uC218\uB3C4 \uC788\uC5B4\uC694.",
   ];
 
+
+  let responsiveLayoutFrame = 0;
+  let audioContext = null;
+  let noiseBuffer = null;
 
   const state = {
     mode: "title",
@@ -101,6 +112,326 @@
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
+  }
+
+  function readPx(styles, propertyName) {
+    return parseFloat(styles[propertyName]) || 0;
+  }
+
+  function getViewportSize() {
+    const viewport = window.visualViewport;
+    return {
+      width: Math.round(viewport ? viewport.width : window.innerWidth),
+      height: Math.round(viewport ? viewport.height : window.innerHeight),
+    };
+  }
+
+  function syncResponsiveLayout() {
+    if (!appShell || !gameCard || !hud || !boardHeader || !canvasFrame || !launcherPanel) {
+      return;
+    }
+
+    const viewportSize = getViewportSize();
+    const isPhonePortrait = viewportSize.width <= 640 && viewportSize.height >= viewportSize.width;
+    const layoutMode = isPhonePortrait ? "phone-portrait" : "desktop";
+
+    document.body.dataset.layout = layoutMode;
+    canvas.style.width = "";
+    canvas.style.height = "";
+
+    if (layoutMode === "desktop") {
+      return;
+    }
+
+    const shellStyles = getComputedStyle(appShell);
+    const cardStyles = getComputedStyle(gameCard);
+    const stageStyles = getComputedStyle(boardStage);
+    const frameStyles = getComputedStyle(canvasFrame);
+
+    const shellPadY = readPx(shellStyles, "paddingTop") + readPx(shellStyles, "paddingBottom");
+    const cardBorderY = readPx(cardStyles, "borderTopWidth") + readPx(cardStyles, "borderBottomWidth");
+    const stagePadX = readPx(stageStyles, "paddingLeft") + readPx(stageStyles, "paddingRight");
+    const stagePadY = readPx(stageStyles, "paddingTop") + readPx(stageStyles, "paddingBottom");
+    const frameExtraX =
+      readPx(frameStyles, "paddingLeft") +
+      readPx(frameStyles, "paddingRight") +
+      readPx(frameStyles, "borderLeftWidth") +
+      readPx(frameStyles, "borderRightWidth");
+    const frameExtraY =
+      readPx(frameStyles, "paddingTop") +
+      readPx(frameStyles, "paddingBottom") +
+      readPx(frameStyles, "borderTopWidth") +
+      readPx(frameStyles, "borderBottomWidth");
+    const portraitGap = readPx(stageStyles, "rowGap") || readPx(stageStyles, "gap");
+
+    const maxWidth = gameCard.clientWidth - stagePadX - frameExtraX;
+    const maxHeight =
+      viewportSize.height -
+      shellPadY -
+      cardBorderY -
+      hud.offsetHeight -
+      stagePadY -
+      frameExtraY -
+      boardHeader.offsetHeight -
+      launcherPanel.offsetHeight -
+      portraitGap -
+      16;
+
+    if (maxWidth <= 0 || maxHeight <= 0) {
+      return;
+    }
+
+    const naturalAspect = CONFIG.viewHeight / CONFIG.viewWidth;
+    const targetWidth = Math.min(maxWidth, maxHeight / naturalAspect);
+    const targetHeight = targetWidth * naturalAspect;
+
+    canvas.style.width = `${Math.floor(targetWidth)}px`;
+    canvas.style.height = `${Math.floor(targetHeight)}px`;
+  }
+
+  function requestResponsiveLayout() {
+    if (responsiveLayoutFrame) {
+      return;
+    }
+    responsiveLayoutFrame = window.requestAnimationFrame(() => {
+      responsiveLayoutFrame = 0;
+      syncResponsiveLayout();
+    });
+  }
+
+  function getAudioContext() {
+    const AudioCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtor) {
+      return null;
+    }
+    if (!audioContext) {
+      audioContext = new AudioCtor();
+    }
+    return audioContext;
+  }
+
+  function unlockAudio() {
+    const ctx = getAudioContext();
+    if (!ctx) {
+      return null;
+    }
+    if (ctx.state === "suspended") {
+      ctx.resume().catch(() => {});
+    }
+    return ctx;
+  }
+
+  function getNoiseBuffer(ctx) {
+    if (noiseBuffer && noiseBuffer.sampleRate === ctx.sampleRate) {
+      return noiseBuffer;
+    }
+    const duration = 0.2;
+    const buffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * duration), ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let index = 0; index < data.length; index += 1) {
+      data[index] = (Math.random() * 2 - 1) * (1 - index / data.length);
+    }
+    noiseBuffer = buffer;
+    return buffer;
+  }
+
+  function scheduleTone(ctx, options) {
+    const start = Math.max(ctx.currentTime, options.start ?? ctx.currentTime);
+    const duration = options.duration ?? 0.12;
+    const frequency = Math.max(50, options.frequency ?? 440);
+    const frequencyEnd = Math.max(50, options.frequencyEnd ?? frequency);
+    const peakGain = Math.max(0.0001, options.gain ?? 0.04);
+    const endGain = Math.max(0.0001, options.gainEnd ?? 0.0001);
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    oscillator.type = options.type ?? "sine";
+    oscillator.frequency.setValueAtTime(frequency, start);
+    if (frequencyEnd !== frequency) {
+      oscillator.frequency.exponentialRampToValueAtTime(frequencyEnd, start + duration);
+    }
+
+    gainNode.gain.setValueAtTime(0.0001, start);
+    gainNode.gain.exponentialRampToValueAtTime(peakGain, start + Math.min(0.02, duration * 0.35));
+    gainNode.gain.exponentialRampToValueAtTime(endGain, start + duration);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    oscillator.start(start);
+    oscillator.stop(start + duration + 0.03);
+  }
+
+  function scheduleNoise(ctx, options) {
+    const start = Math.max(ctx.currentTime, options.start ?? ctx.currentTime);
+    const duration = options.duration ?? 0.08;
+    const source = ctx.createBufferSource();
+    const filter = ctx.createBiquadFilter();
+    const gainNode = ctx.createGain();
+
+    source.buffer = getNoiseBuffer(ctx);
+    filter.type = options.filterType ?? "bandpass";
+    filter.frequency.setValueAtTime(options.filterFrequency ?? 900, start);
+    if (options.filterFrequencyEnd) {
+      filter.frequency.exponentialRampToValueAtTime(options.filterFrequencyEnd, start + duration);
+    }
+    if (options.q) {
+      filter.Q.setValueAtTime(options.q, start);
+    }
+
+    gainNode.gain.setValueAtTime(0.0001, start);
+    gainNode.gain.exponentialRampToValueAtTime(options.gain ?? 0.025, start + Math.min(0.015, duration * 0.4));
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    source.connect(filter);
+    filter.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    source.start(start);
+    source.stop(start + duration + 0.03);
+  }
+
+  function playShotSound() {
+    const ctx = unlockAudio();
+    if (!ctx) {
+      return;
+    }
+    const start = ctx.currentTime;
+    scheduleTone(ctx, {
+      type: "triangle",
+      start,
+      duration: 0.11,
+      frequency: 760,
+      frequencyEnd: 300,
+      gain: 0.05,
+    });
+    scheduleTone(ctx, {
+      type: "sine",
+      start: start + 0.015,
+      duration: 0.08,
+      frequency: 520,
+      frequencyEnd: 210,
+      gain: 0.022,
+    });
+  }
+
+  function playMatchSound(matchCount, combo) {
+    const ctx = unlockAudio();
+    if (!ctx) {
+      return;
+    }
+    const start = ctx.currentTime;
+    const hitCount = Math.min(4, Math.max(2, Math.floor(matchCount / 2) + 1));
+    for (let index = 0; index < hitCount; index += 1) {
+      const frequency = 360 + index * 110 + Math.min(combo, 4) * 22;
+      scheduleTone(ctx, {
+        type: "sine",
+        start: start + index * 0.032,
+        duration: 0.1,
+        frequency,
+        frequencyEnd: frequency * 1.18,
+        gain: 0.036,
+      });
+    }
+    if (combo > 1) {
+      scheduleTone(ctx, {
+        type: "triangle",
+        start: start + 0.05,
+        duration: 0.16,
+        frequency: 680,
+        frequencyEnd: 980,
+        gain: 0.02,
+      });
+    }
+  }
+
+  function playDropSound(dropCount) {
+    const ctx = unlockAudio();
+    if (!ctx) {
+      return;
+    }
+    const start = ctx.currentTime;
+    scheduleTone(ctx, {
+      type: "triangle",
+      start,
+      duration: 0.16,
+      frequency: 260,
+      frequencyEnd: 120,
+      gain: 0.038,
+    });
+    scheduleNoise(ctx, {
+      start: start + 0.01,
+      duration: 0.11,
+      gain: Math.min(0.05, 0.018 + dropCount * 0.0025),
+      filterFrequency: 520,
+      filterFrequencyEnd: 240,
+      q: 0.8,
+    });
+  }
+
+  function playDescendSound(fromPenalty) {
+    const ctx = unlockAudio();
+    if (!ctx) {
+      return;
+    }
+    const start = ctx.currentTime;
+    scheduleTone(ctx, {
+      type: fromPenalty ? "sawtooth" : "triangle",
+      start,
+      duration: fromPenalty ? 0.22 : 0.16,
+      frequency: fromPenalty ? 180 : 210,
+      frequencyEnd: 90,
+      gain: fromPenalty ? 0.05 : 0.03,
+    });
+    scheduleNoise(ctx, {
+      start: start + 0.01,
+      duration: fromPenalty ? 0.14 : 0.09,
+      gain: fromPenalty ? 0.03 : 0.018,
+      filterType: "lowpass",
+      filterFrequency: fromPenalty ? 700 : 520,
+      filterFrequencyEnd: 180,
+    });
+  }
+
+  function playStageClearSound() {
+    const ctx = unlockAudio();
+    if (!ctx) {
+      return;
+    }
+    const start = ctx.currentTime;
+    const notes = [440, 554, 659, 880];
+    notes.forEach((frequency, index) => {
+      scheduleTone(ctx, {
+        type: "triangle",
+        start: start + index * 0.08,
+        duration: 0.18,
+        frequency,
+        frequencyEnd: frequency * 1.04,
+        gain: 0.03,
+      });
+    });
+  }
+
+  function playGameOverSound() {
+    const ctx = unlockAudio();
+    if (!ctx) {
+      return;
+    }
+    const start = ctx.currentTime;
+    scheduleTone(ctx, {
+      type: "sawtooth",
+      start,
+      duration: 0.24,
+      frequency: 320,
+      frequencyEnd: 150,
+      gain: 0.036,
+    });
+    scheduleTone(ctx, {
+      type: "triangle",
+      start: start + 0.12,
+      duration: 0.28,
+      frequency: 180,
+      frequencyEnd: 90,
+      gain: 0.03,
+    });
   }
 
   function mixColor(hex, amount) {
@@ -187,8 +518,12 @@
     return STAGE_THEMES[(stage - 1) % STAGE_THEMES.length];
   }
 
+  function isFinalStage(stage) {
+    return stage >= FINAL_STAGE;
+  }
+
   function getStageLabel(stage) {
-    return `${PLAYER_NAME}의 ${getStageTheme(stage)}`;
+    return `${PLAYER_NAME}\uC758 ${getStageTheme(stage)}`;
   }
 
   function getComboCheer(combo) {
@@ -215,6 +550,7 @@
 
   function updateStatus(message) {
     statusText.textContent = message;
+    requestResponsiveLayout();
   }
 
   function updateLauncherPreview() {
@@ -290,7 +626,8 @@
   }
 
   function resetRun(stage = 1, preserveScore = false) {
-    state.stage = stage;
+    const boundedStage = clamp(stage, 1, FINAL_STAGE);
+    state.stage = boundedStage;
     state.score = preserveScore ? state.score : 0;
     state.combo = 0;
     state.missStreak = 0;
@@ -307,7 +644,7 @@
       state.stageClearTimerId = 0;
     }
     state.board = createEmptyBoard();
-    buildStage(stage);
+    buildStage(boundedStage);
     state.currentBubble = createBubble(pickBubbleColor());
     state.nextBubble = createBubble(pickBubbleColor());
     state.mode = "playing";
@@ -317,8 +654,8 @@
     checkDangerState();
     updateHud();
     updateLauncherPreview();
-    addPopup(getStageLabel(stage), CONFIG.launcherX, 138, "#ffd166");
-    updateStatus(`${PLAYER_NAME}, ${getStageTheme(stage)} \uC2DC\uC791! \uCCAB \uBC84\uBE14\uC744 \uC2DC\uC6D0\uD558\uAC8C \uC3F4\uBCF4\uC138\uC694.`);
+    addPopup(getStageLabel(boundedStage), CONFIG.launcherX, 138, "#ffd166");
+    updateStatus(`${PLAYER_NAME}, ${getStageTheme(boundedStage)} \uC2DC\uC791! \uCCAB \uC0F7\uC744 \uC790\uC2E0 \uC788\uAC8C \uB0A0\uB824\uBD10\uC694.`);
   }
 
   function togglePause() {
@@ -375,6 +712,23 @@
     }
   }
 
+  function launchFinalEndingCelebration() {
+    const burstPoints = [
+      { x: 92, y: 146, color: "#ffd166", amount: 28 },
+      { x: 210, y: 182, color: "#7cf5d6", amount: 32 },
+      { x: 328, y: 146, color: "#ff8fab", amount: 28 },
+      { x: 130, y: 286, color: "#5f7bff", amount: 24 },
+      { x: 290, y: 286, color: "#c77dff", amount: 24 },
+    ];
+
+    for (const burst of burstPoints) {
+      addParticles(burst.x, burst.y, burst.color, burst.amount);
+    }
+
+    addPopup(`${PLAYER_NAME} \uBC84\uBE14 \uB9C8\uC2A4\uD130!`, CONFIG.launcherX, 210, "#ffd166");
+    addPopup("\uBC84\uBE14 \uC288\uD130 \uACE0\uC218 \uC778\uC815!", CONFIG.launcherX, 254, "#7cf5d6");
+  }
+
   function beginAim(pointerX, pointerY) {
     if (state.mode !== "playing" || state.projectile) {
       return;
@@ -405,6 +759,7 @@
       vy: Math.sin(state.aimAngle) * CONFIG.projectileSpeed,
       color: state.currentBubble.color,
     };
+    playShotSound();
     state.currentBubble = state.nextBubble;
     state.nextBubble = createBubble(pickBubbleColor());
     state.aiming = false;
@@ -603,16 +958,32 @@
         return;
       }
       state.mode = "clear";
-      showOverlay({
-        kicker: `${PLAYER_NAME} Clear`,
-        title: `${getStageLabel(state.stage)} \uC644\uB8CC`,
-        message: `${PLAYER_NAME}, \uD604\uC7AC \uC810\uC218\uB294 ${state.score.toLocaleString("ko-KR")}\uC810\uC774\uC5D0\uC694. \uB2E4\uC74C \uC2A4\uD14C\uC774\uC9C0\uC5D0\uC11C\uB3C4 \uBC84\uBE14\uC1FC\uB97C \uC774\uC5B4\uAC08\uAE4C\uC694?`,
-        primaryLabel: "\uB2E4\uC74C \uC2A4\uD14C\uC774\uC9C0",
-        primaryAction: "nextStage",
-        secondaryLabel: "\uB2E4\uC2DC\uD558\uAE30",
-        secondaryAction: "restart",
-      });
-      updateStatus(`${PLAYER_NAME}, \uC2A4\uD14C\uC774\uC9C0\uB97C \uD074\uB9AC\uC5B4\uD588\uC5B4\uC694!`);
+      playStageClearSound();
+
+      if (isFinalStage(state.stage)) {
+        launchFinalEndingCelebration();
+        showOverlay({
+          kicker: `${PLAYER_NAME} Special Ending`,
+          title: `${PLAYER_NAME}, \uBC84\uBE14 \uC288\uD130 \uACE0\uC218 \uC778\uC815!`,
+          message: `\uBB34\uB824 ${FINAL_STAGE}\uAC1C\uC758 \uC2A4\uD14C\uC774\uC9C0\uB97C \uBAA8\uB450 \uD074\uB9AC\uC5B4\uD588\uC5B4\uC694. \uCD5C\uC885 \uC810\uC218\uB294 ${state.score.toLocaleString("ko-KR")}\uC810. \uC774\uC81C ${PLAYER_NAME}\uC758 Bubble Bloom\uC740 \uC644\uC804 \uC815\uBCF5\uC785\uB2C8\uB2E4. \uC624\uB298\uBD80\uD130 ${PLAYER_NAME}\uB294 \uACF5\uC2DD \uBC84\uBE14 \uC288\uD130 \uB9C8\uC2A4\uD130\uC608\uC694.`,
+          primaryLabel: "\uCC98\uC74C\uBD80\uD130 \uB2E4\uC2DC",
+          primaryAction: "newGame",
+          secondaryLabel: "\uB9C8\uC9C0\uB9C9 \uC2A4\uD14C\uC774\uC9C0 \uB2E4\uC2DC",
+          secondaryAction: "restart",
+        });
+        updateStatus(`${PLAYER_NAME}, \uBAA8\uB4E0 \uC2A4\uD14C\uC774\uC9C0\uB97C \uD074\uB9AC\uC5B4\uD588\uC5B4\uC694! \uD2B9\uBCC4 \uC5D4\uB529\uC774 \uC5F4\uB838\uC2B5\uB2C8\uB2E4.`);
+      } else {
+        showOverlay({
+          kicker: `${PLAYER_NAME} Clear`,
+          title: `${getStageLabel(state.stage)} \uD074\uB9AC\uC5B4`,
+          message: `${PLAYER_NAME}, \uC774\uBC88 \uC2A4\uD14C\uC774\uC9C0\uB97C ${state.score.toLocaleString("ko-KR")}\uC810\uC73C\uB85C \uB9C8\uBB34\uB9AC\uD588\uC5B4\uC694. \uB2E4\uC74C \uB77C\uC6B4\uB4DC\uC5D0\uC11C\uB3C4 \uBC84\uBE14 \uAC10\uAC01\uC744 \uC774\uC5B4\uAC00\uBCFC\uAE4C\uC694?`,
+          primaryLabel: "\uB2E4\uC74C \uC2A4\uD14C\uC774\uC9C0",
+          primaryAction: "nextStage",
+          secondaryLabel: "\uB2E4\uC2DC\uD558\uAE30",
+          secondaryAction: "restart",
+        });
+        updateStatus(`${PLAYER_NAME}, \uC2A4\uD14C\uC774\uC9C0 \uD074\uB9AC\uC5B4!`);
+      }
       updateHud();
     }, 320);
   }
@@ -630,6 +1001,7 @@
     state.projectile = null;
     state.aiming = false;
     triggerShake();
+    playGameOverSound();
     showOverlay({
       kicker: `${PLAYER_NAME} Retry`,
       title: `${PLAYER_NAME}, \uD55C \uD310 \uB354 \uB3C4\uC804\uD574\uBCFC\uAE4C\uC694?`,
@@ -671,6 +1043,7 @@
     state.descendElapsed = 0;
     state.flashLevel = fromPenalty ? 0.85 : 0.45;
     triggerShake();
+    playDescendSound(fromPenalty);
     checkDangerState();
   }
 
@@ -690,6 +1063,10 @@
 
       state.combo += 1;
       state.missStreak = 0;
+      playMatchSound(matchedCount, state.combo);
+      if (floatingCount > 0) {
+        playDropSound(floatingCount);
+      }
       const comboBonus = state.combo > 1 ? (state.combo - 1) * 25 : 0;
       const gainedScore = matchedCount * 120 + floatingCount * 180 + comboBonus;
       state.score += gainedScore;
@@ -1063,6 +1440,10 @@
         resetRun(state.stage);
         break;
       case "nextStage":
+        if (isFinalStage(state.stage)) {
+          resetRun(1);
+          break;
+        }
         state.score += state.stage * 300;
         resetRun(state.stage + 1, true);
         break;
@@ -1119,12 +1500,16 @@
   }
 
   pauseButton.addEventListener("click", togglePause);
-  startGameButton.addEventListener("click", () => resetRun(1));
+  startGameButton.addEventListener("click", () => {
+    unlockAudio();
+    resetRun(1);
+  });
   primaryActionButton.addEventListener("click", handlePrimaryAction);
   secondaryActionButton.addEventListener("click", handleSecondaryAction);
   homeActionButton.addEventListener("click", goHome);
 
   canvas.addEventListener("pointerdown", (event) => {
+    unlockAudio();
     const point = getCanvasCoordinates(event);
     beginAim(point.x, point.y);
   });
@@ -1143,6 +1528,15 @@
   canvas.addEventListener("pointercancel", () => {
     state.aiming = false;
   });
+
+  window.addEventListener("resize", requestResponsiveLayout);
+  window.addEventListener("orientationchange", () => {
+    window.setTimeout(requestResponsiveLayout, 120);
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", requestResponsiveLayout);
+    window.visualViewport.addEventListener("scroll", requestResponsiveLayout);
+  }
 
   document.addEventListener("keydown", (event) => {
     if (event.code === "Space") {
