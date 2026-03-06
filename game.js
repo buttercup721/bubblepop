@@ -165,6 +165,7 @@
     const portraitGap = readPx(stageStyles, "rowGap") || readPx(stageStyles, "gap");
 
     const maxWidth = gameCard.clientWidth - stagePadX - frameExtraX;
+    const phonePaddingSlack = 6;
     const maxHeight =
       viewportSize.height -
       shellPadY -
@@ -175,7 +176,7 @@
       boardHeader.offsetHeight -
       launcherPanel.offsetHeight -
       portraitGap -
-      16;
+      phonePaddingSlack;
 
     if (maxWidth <= 0 || maxHeight <= 0) {
       return;
@@ -965,7 +966,7 @@
         showOverlay({
           kicker: `${PLAYER_NAME} Special Ending`,
           title: `${PLAYER_NAME}, \uBC84\uBE14 \uC288\uD130 \uACE0\uC218 \uC778\uC815!`,
-          message: `\uBB34\uB824 ${FINAL_STAGE}\uAC1C\uC758 \uC2A4\uD14C\uC774\uC9C0\uB97C \uBAA8\uB450 \uD074\uB9AC\uC5B4\uD588\uC5B4\uC694. \uCD5C\uC885 \uC810\uC218\uB294 ${state.score.toLocaleString("ko-KR")}\uC810. \uC774\uC81C ${PLAYER_NAME}\uC758 Bubble Bloom\uC740 \uC644\uC804 \uC815\uBCF5\uC785\uB2C8\uB2E4. \uC624\uB298\uBD80\uD130 ${PLAYER_NAME}\uB294 \uACF5\uC2DD \uBC84\uBE14 \uC288\uD130 \uB9C8\uC2A4\uD130\uC608\uC694.`,
+          message: `\uBB34\uB824 ${FINAL_STAGE}\uAC1C\uC758 \uC2A4\uD14C\uC774\uC9C0\uB97C \uBAA8\uB450 \uD074\uB9AC\uC5B4\uD588\uC5B4\uC694. \uCD5C\uC885 \uC810\uC218\uB294 ${state.score.toLocaleString("ko-KR")}\uC810. \uC774\uC81C ${PLAYER_NAME}\uC758 Bubble Pop\uC740 \uC644\uC804 \uC815\uBCF5\uC785\uB2C8\uB2E4. \uC624\uB298\uBD80\uD130 ${PLAYER_NAME}\uB294 \uACF5\uC2DD \uBC84\uBE14 \uC288\uD130 \uB9C8\uC2A4\uD130\uC608\uC694.`,
           primaryLabel: "\uCC98\uC74C\uBD80\uD130 \uB2E4\uC2DC",
           primaryAction: "newGame",
           secondaryLabel: "\uB9C8\uC9C0\uB9C9 \uC2A4\uD14C\uC774\uC9C0 \uB2E4\uC2DC",
