@@ -133,57 +133,25 @@
 
     const viewportSize = getViewportSize();
     const isPhonePortrait = viewportSize.width <= 640 && viewportSize.height >= viewportSize.width;
-    const layoutMode = isPhonePortrait ? "phone-portrait" : "desktop";
+    const isWideDesktop = !isPhonePortrait && viewportSize.width >= 960;
+    const layoutMode = isPhonePortrait ? "phone-portrait" : isWideDesktop ? "desktop-wide" : "desktop-compact";
 
     document.body.dataset.layout = layoutMode;
     canvas.style.width = "";
     canvas.style.height = "";
 
-    if (layoutMode === "desktop") {
-      return;
-    }
-
-    const shellStyles = getComputedStyle(appShell);
-    const cardStyles = getComputedStyle(gameCard);
-    const stageStyles = getComputedStyle(boardStage);
     const frameStyles = getComputedStyle(canvasFrame);
+    const frameInnerWidth =
+      canvasFrame.clientWidth - readPx(frameStyles, "paddingLeft") - readPx(frameStyles, "paddingRight");
+    const frameInnerHeight =
+      canvasFrame.clientHeight - readPx(frameStyles, "paddingTop") - readPx(frameStyles, "paddingBottom");
 
-    const shellPadY = readPx(shellStyles, "paddingTop") + readPx(shellStyles, "paddingBottom");
-    const cardBorderY = readPx(cardStyles, "borderTopWidth") + readPx(cardStyles, "borderBottomWidth");
-    const stagePadX = readPx(stageStyles, "paddingLeft") + readPx(stageStyles, "paddingRight");
-    const stagePadY = readPx(stageStyles, "paddingTop") + readPx(stageStyles, "paddingBottom");
-    const frameExtraX =
-      readPx(frameStyles, "paddingLeft") +
-      readPx(frameStyles, "paddingRight") +
-      readPx(frameStyles, "borderLeftWidth") +
-      readPx(frameStyles, "borderRightWidth");
-    const frameExtraY =
-      readPx(frameStyles, "paddingTop") +
-      readPx(frameStyles, "paddingBottom") +
-      readPx(frameStyles, "borderTopWidth") +
-      readPx(frameStyles, "borderBottomWidth");
-    const portraitGap = readPx(stageStyles, "rowGap") || readPx(stageStyles, "gap");
-
-    const maxWidth = gameCard.clientWidth - stagePadX - frameExtraX;
-    const phonePaddingSlack = 6;
-    const maxHeight =
-      viewportSize.height -
-      shellPadY -
-      cardBorderY -
-      hud.offsetHeight -
-      stagePadY -
-      frameExtraY -
-      boardHeader.offsetHeight -
-      launcherPanel.offsetHeight -
-      portraitGap -
-      phonePaddingSlack;
-
-    if (maxWidth <= 0 || maxHeight <= 0) {
+    if (frameInnerWidth <= 0 || frameInnerHeight <= 0) {
       return;
     }
 
     const naturalAspect = CONFIG.viewHeight / CONFIG.viewWidth;
-    const targetWidth = Math.min(maxWidth, maxHeight / naturalAspect);
+    const targetWidth = Math.min(frameInnerWidth, frameInnerHeight / naturalAspect);
     const targetHeight = targetWidth * naturalAspect;
 
     canvas.style.width = `${Math.floor(targetWidth)}px`;
