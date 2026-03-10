@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8">
@@ -12,94 +12,98 @@
 
   <main class="app-shell" id="appShell">
     <section class="game-card" id="gameCard">
-      <header class="hud">
-        <div class="hud-item">
-          <span class="hud-label">점수</span>
-          <strong class="hud-value" id="scoreValue">0</strong>
-        </div>
-        <div class="hud-item">
-          <span class="hud-label">콤보</span>
-          <strong class="hud-value" id="comboValue">0</strong>
-        </div>
-        <div class="hud-item">
-          <span class="hud-label">스테이지</span>
-          <strong class="hud-value" id="stageValue">1</strong>
-        </div>
-        <button class="hud-button" id="pauseButton" type="button">일시정지</button>
-      </header>
-
       <section class="board-stage" id="boardStage">
-        <div class="board-header" id="boardHeader">
-          <div>
-            <p class="eyebrow">Made For 현서</p>
-            <h1>현서의 Bubble Pop</h1>
-            <p class="dedication-chip">현서를 위한 커스텀 에디션</p>
+        <section class="board-main">
+          <div class="board-header" id="boardHeader">
+            <div>
+              <p class="eyebrow">Made For 현서</p>
+              <h1>현서의 Bubble Pop</h1>
+              <p class="dedication-chip">현서를 위한 커스텀 에디션</p>
+            </div>
+            <p class="board-tip">현서, 벽 반사로 숨은 각도까지 노려봐요.</p>
           </div>
-          <p class="board-tip">현서, 벽 반사로 숨은 각도까지 노려봐요.</p>
-        </div>
 
-        <div class="canvas-frame" id="canvasFrame">
-          <canvas
-            id="gameCanvas"
-            class="game-canvas"
-            width="420"
-            height="760"
-            aria-label="버블 슈터 게임 보드"
-          ></canvas>
+          <div class="canvas-frame" id="canvasFrame">
+            <canvas
+              id="gameCanvas"
+              class="game-canvas"
+              width="420"
+              height="760"
+              aria-label="버블 슈터 게임 보드"
+            ></canvas>
 
-          <div class="overlay-screen overlay-active" id="titleScreen" aria-live="polite">
-            <div class="overlay-card title-card">
-              <p class="overlay-kicker">현서를 위한 커스텀 게임</p>
-              <h2>현서의 Bubble Pop</h2>
-              <p class="overlay-copy">
-                현서가 직접 플레이하면서 자기 이름과 응원 메시지를 만날 수 있는 전용 버블 슈터예요.
-                같은 색 버블을 3개 이상 붙여 터뜨리고, 끊긴 버블까지 시원하게 떨어뜨려보세요.
-              </p>
-              <ul class="overlay-list">
-                <li>현서 전용 스테이지 이름과 상태 메시지가 계속 따라옵니다.</li>
-                <li>색상은 5가지, 다음 버블은 항상 미리 보여 전략적으로 노릴 수 있어요.</li>
-                <li>위험선을 넘기기 전에 모든 버블을 지우면 현서의 스테이지 클리어입니다.</li>
-              </ul>
-              <div class="overlay-actions">
-                <button class="primary-button" id="startGameButton" type="button">현서의 게임 시작</button>
+            <div class="overlay-screen overlay-active" id="titleScreen" aria-live="polite">
+              <div class="overlay-card title-card">
+                <p class="overlay-kicker">현서를 위한 커스텀 게임</p>
+                <h2>현서의 Bubble Pop</h2>
+                <p class="overlay-copy">
+                  현서가 직접 플레이하면서 자기 이름과 응원 메시지를 만날 수 있는 전용 버블 슈터예요.
+                  같은 색 버블을 3개 이상 붙여 터뜨리고, 끊긴 버블까지 시원하게 떨어뜨려보세요.
+                </p>
+                <ul class="overlay-list">
+                  <li>현서 전용 스테이지 이름과 상태 메시지가 계속 따라옵니다.</li>
+                  <li>색상은 5가지, 다음 버블은 항상 미리 보여 전략적으로 노릴 수 있어요.</li>
+                  <li>위험선을 넘기기 전에 모든 버블을 지우면 현서의 스테이지 클리어입니다.</li>
+                </ul>
+                <div class="overlay-actions">
+                  <button class="primary-button" id="startGameButton" type="button">현서의 게임 시작</button>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="overlay-screen" id="stateScreen" aria-live="polite">
-            <div class="overlay-card">
-              <p class="overlay-kicker" id="stateKicker">일시정지</p>
-              <h2 id="stateTitle">잠깐 멈춤</h2>
-              <p class="overlay-copy" id="stateMessage">호흡을 고른 뒤 다시 이어서 플레이할 수 있어요.</p>
-              <div class="overlay-actions">
-                <button class="primary-button" id="primaryActionButton" type="button">계속하기</button>
-                <button class="secondary-button" id="secondaryActionButton" type="button">다시하기</button>
-                <button class="ghost-button" id="homeActionButton" type="button">홈으로</button>
+            <div class="overlay-screen" id="stateScreen" aria-live="polite">
+              <div class="overlay-card">
+                <p class="overlay-kicker" id="stateKicker">일시정지</p>
+                <h2 id="stateTitle">잠깐 멈춤</h2>
+                <p class="overlay-copy" id="stateMessage">호흡을 고른 뒤 다시 이어서 플레이할 수 있어요.</p>
+                <div class="overlay-actions">
+                  <button class="primary-button" id="primaryActionButton" type="button">계속하기</button>
+                  <button class="secondary-button" id="secondaryActionButton" type="button">다시하기</button>
+                  <button class="ghost-button" id="homeActionButton" type="button">홈으로</button>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-
-        <section class="launcher-panel" id="launcherPanel">
-          <div class="launcher-slot">
-            <span class="slot-label">현재 버블</span>
-            <div class="slot-bubble slot-bubble-large" id="currentBubblePreview"></div>
-          </div>
-          <div class="launcher-center">
-            <span class="stage-flavor" id="stageFlavorText">현서 전용 스테이지가 준비 중이에요.</span>
-            <span class="launcher-status" id="statusText">현서, 시작 버튼을 누르면 첫 스테이지가 열려요.</span>
-            <div class="meter-row">
-              <span>다음 하강</span>
-              <div class="meter-track">
-                <div class="meter-fill" id="descentMeter"></div>
-              </div>
-            </div>
-          </div>
-          <div class="launcher-slot">
-            <span class="slot-label">다음 버블</span>
-            <div class="slot-bubble" id="nextBubblePreview"></div>
           </div>
         </section>
+
+        <aside class="side-panel">
+          <header class="hud">
+            <div class="hud-item">
+              <span class="hud-label">점수</span>
+              <strong class="hud-value" id="scoreValue">0</strong>
+            </div>
+            <div class="hud-item">
+              <span class="hud-label">콤보</span>
+              <strong class="hud-value" id="comboValue">0</strong>
+            </div>
+            <div class="hud-item">
+              <span class="hud-label">스테이지</span>
+              <strong class="hud-value" id="stageValue">1</strong>
+            </div>
+            <button class="hud-button" id="pauseButton" type="button">일시정지</button>
+          </header>
+
+          <section class="launcher-panel" id="launcherPanel">
+            <div class="launcher-slot">
+              <span class="slot-label">현재 버블</span>
+              <div class="slot-bubble slot-bubble-large" id="currentBubblePreview"></div>
+            </div>
+            <div class="launcher-center">
+              <span class="stage-flavor" id="stageFlavorText">현서 전용 스테이지가 준비 중이에요.</span>
+              <span class="launcher-status" id="statusText">현서, 시작 버튼을 누르면 첫 스테이지가 열려요.</span>
+              <div class="meter-row">
+                <span>다음 하강</span>
+                <div class="meter-track">
+                  <div class="meter-fill" id="descentMeter"></div>
+                </div>
+              </div>
+            </div>
+            <div class="launcher-slot">
+              <span class="slot-label">다음 버블</span>
+              <div class="slot-bubble" id="nextBubblePreview"></div>
+            </div>
+          </section>
+        </aside>
       </section>
     </section>
   </main>

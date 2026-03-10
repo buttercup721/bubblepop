@@ -437,27 +437,58 @@ body {
   align-items: stretch;
   justify-items: center;
   padding:
-    calc(0.9rem + env(safe-area-inset-top))
-    calc(0.9rem + env(safe-area-inset-right))
-    calc(0.9rem + env(safe-area-inset-bottom))
-    calc(0.9rem + env(safe-area-inset-left));
+    calc(0.65rem + env(safe-area-inset-top))
+    calc(0.65rem + env(safe-area-inset-right))
+    calc(0.65rem + env(safe-area-inset-bottom))
+    calc(0.65rem + env(safe-area-inset-left));
 }
 
 .game-card {
-  width: min(100%, 44rem);
-  height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 0.5rem);
+  width: min(100%, 88rem);
+  height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 0.2rem);
   display: flex;
   flex-direction: column;
   min-height: 0;
   max-height: none;
 }
 
+.board-stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 18rem;
+  gap: 1rem;
+  padding: 1rem;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.board-main {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.8rem;
+}
+
+.side-panel {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.8rem;
+}
+
 .hud {
-  align-items: stretch;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  padding: 0.85rem;
+  border-bottom: 0;
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .hud-item {
-  min-height: 4rem;
+  min-height: 3.8rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -477,19 +508,22 @@ body {
   touch-action: manipulation;
 }
 
-.board-stage {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: 0.8rem;
-  padding: 1rem;
-  flex: 1 1 auto;
-  min-height: 0;
+.hud-button {
+  align-self: stretch;
+  box-shadow: none;
 }
 
 .board-header {
   margin-bottom: 0;
+  align-items: center;
+}
+
+.board-header h1 {
+  font-size: clamp(1.65rem, 2.4vw, 2.35rem);
+}
+
+.board-tip {
+  max-width: 16rem;
 }
 
 .canvas-frame {
@@ -500,7 +534,7 @@ body {
   min-height: 0;
   height: 100%;
   overflow: hidden;
-  padding: 0.7rem;
+  padding: 0.65rem;
 }
 
 .game-canvas {
@@ -522,201 +556,152 @@ body {
 }
 
 .launcher-panel {
-  grid-template-columns: 5rem minmax(0, 1fr) 5rem;
-  gap: 0.85rem;
-  margin-top: 0;
-  padding: 1rem;
-  align-items: center;
-}
-
-.slot-label {
-  font-size: 0.88rem;
-}
-
-.launcher-status {
-  min-height: 3em;
-  font-size: 0.98rem;
-}
-
-.meter-row {
-  font-size: 0.88rem;
-}
-
-.stage-flavor {
-  min-height: 1.3em;
-  font-size: 0.92rem;
-}
-
-@media (max-width: 820px) {
-  .hud-label {
-    font-size: 0.78rem;
-  }
-
-  .hud-value {
-    font-size: 1.28rem;
-  }
-
-  .board-header h1 {
-    font-size: clamp(2rem, 7vw, 2.5rem);
-  }
-
-  .overlay-copy,
-  .overlay-list {
-    font-size: 1rem;
-  }
-}
-
-@media (max-height: 860px) {
-  body:not([data-layout="phone-portrait"]) .hud {
-    gap: 0.55rem;
-    padding: 0.72rem;
-  }
-
-  body:not([data-layout="phone-portrait"]) .hud-item,
-  body:not([data-layout="phone-portrait"]) .hud-button {
-    min-height: 3.5rem;
-    padding: 0.6rem 0.72rem;
-  }
-
-  body:not([data-layout="phone-portrait"]) .eyebrow,
-  body:not([data-layout="phone-portrait"]) .dedication-chip {
-    display: none;
-  }
-
-  body:not([data-layout="phone-portrait"]) .board-header h1 {
-    font-size: clamp(1.45rem, 2.4vw, 1.95rem);
-  }
-
-  body:not([data-layout="phone-portrait"]) .board-tip {
-    font-size: 0.82rem;
-  }
-
-  body:not([data-layout="phone-portrait"]) .board-stage {
-    gap: 0.55rem;
-    padding: 0.8rem;
-  }
-
-  body:not([data-layout="phone-portrait"]) .launcher-panel {
-    gap: 0.65rem;
-    padding: 0.72rem;
-  }
-
-  body:not([data-layout="phone-portrait"]) .launcher-status {
-    min-height: 2.6em;
-    font-size: 0.9rem;
-  }
-
-  body:not([data-layout="phone-portrait"]) .slot-bubble {
-    width: 2.6rem;
-    height: 2.6rem;
-  }
-
-  body:not([data-layout="phone-portrait"]) .slot-bubble-large {
-    width: 3rem;
-    height: 3rem;
-  }
-}
-
-body[data-layout="desktop-compact"] .game-card {
-  width: min(100%, 52rem);
-}
-
-body[data-layout="desktop-compact"] .hud {
-  gap: 0.65rem;
-  padding: 0.85rem;
-}
-
-body[data-layout="desktop-compact"] .board-stage {
-  padding: 0.85rem;
-  gap: 0.65rem;
-}
-
-body[data-layout="desktop-compact"] .board-header {
-  align-items: start;
-  gap: 0.65rem;
-}
-
-body[data-layout="desktop-compact"] .board-tip {
-  max-width: none;
-  font-size: 0.88rem;
-}
-
-body[data-layout="desktop-compact"] .launcher-panel {
-  padding: 0.85rem;
-}
-
-body[data-layout="desktop-wide"] .game-card {
-  width: min(100%, 76rem);
-}
-
-body[data-layout="desktop-wide"] .hud {
-  grid-template-columns: repeat(3, minmax(0, 1fr)) 10rem;
-}
-
-body[data-layout="desktop-wide"] .board-stage {
-  grid-template-columns: minmax(0, 1fr) 19.5rem;
-  grid-template-rows: auto minmax(0, 1fr);
-  grid-template-areas:
-    "header header"
-    "canvas launcher";
-  align-items: stretch;
-  gap: 1rem;
-}
-
-body[data-layout="desktop-wide"] .board-header {
-  grid-area: header;
-  align-items: center;
-}
-
-body[data-layout="desktop-wide"] .board-tip {
-  max-width: 20rem;
-}
-
-body[data-layout="desktop-wide"] .canvas-frame {
-  grid-area: canvas;
-}
-
-body[data-layout="desktop-wide"] .launcher-panel {
-  grid-area: launcher;
   height: 100%;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-areas:
     "center center"
     "current next";
+  gap: 0.85rem;
+  margin-top: 0;
+  padding: 0.95rem;
   align-content: start;
 }
 
-body[data-layout="desktop-wide"] .launcher-panel > .launcher-slot:first-child {
+.launcher-panel > .launcher-slot:first-child {
   grid-area: current;
 }
 
-body[data-layout="desktop-wide"] .launcher-panel > .launcher-slot:last-child {
+.launcher-panel > .launcher-slot:last-child {
   grid-area: next;
 }
 
-body[data-layout="desktop-wide"] .launcher-center {
+.launcher-center {
   grid-area: center;
+  min-width: 0;
   align-self: start;
 }
 
-body[data-layout="desktop-wide"] .launcher-status {
-  min-height: 5.2em;
-  font-size: 1rem;
+.slot-label {
+  font-size: 0.8rem;
 }
 
-body[data-layout="desktop-wide"] .stage-flavor {
+.slot-bubble {
+  width: 3.1rem;
+  height: 3.1rem;
+}
+
+.slot-bubble-large {
+  width: 3.6rem;
+  height: 3.6rem;
+}
+
+.launcher-status {
+  min-height: 4.2em;
+  font-size: 0.96rem;
+  line-height: 1.4;
+}
+
+.meter-row {
+  font-size: 0.84rem;
+}
+
+.stage-flavor {
   min-height: auto;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+}
+
+@media (max-height: 860px) {
+  body:not([data-layout="phone-portrait"]) .app-shell {
+    padding:
+      calc(0.45rem + env(safe-area-inset-top))
+      calc(0.45rem + env(safe-area-inset-right))
+      calc(0.45rem + env(safe-area-inset-bottom))
+      calc(0.45rem + env(safe-area-inset-left));
+  }
+
+  body:not([data-layout="phone-portrait"]) .eyebrow,
+  body:not([data-layout="phone-portrait"]) .dedication-chip,
+  body:not([data-layout="phone-portrait"]) .board-tip {
+    display: none;
+  }
+
+  body:not([data-layout="phone-portrait"]) .board-header h1 {
+    font-size: clamp(1.35rem, 2vw, 1.8rem);
+  }
+
+  body:not([data-layout="phone-portrait"]) .board-stage {
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  body:not([data-layout="phone-portrait"]) .hud {
+    padding: 0.72rem;
+    gap: 0.55rem;
+  }
+
+  body:not([data-layout="phone-portrait"]) .hud-item,
+  body:not([data-layout="phone-portrait"]) .hud-button {
+    min-height: 3.35rem;
+  }
+
+  body:not([data-layout="phone-portrait"]) .launcher-panel {
+    padding: 0.75rem;
+    gap: 0.65rem;
+  }
+
+  body:not([data-layout="phone-portrait"]) .launcher-status {
+    min-height: 3.2em;
+    font-size: 0.88rem;
+  }
+
+  body:not([data-layout="phone-portrait"]) .slot-bubble {
+    width: 2.8rem;
+    height: 2.8rem;
+  }
+
+  body:not([data-layout="phone-portrait"]) .slot-bubble-large {
+    width: 3.2rem;
+    height: 3.2rem;
+  }
+}
+
+body[data-layout="desktop-compact"] .game-card {
+  width: min(100%, 76rem);
+}
+
+body[data-layout="desktop-compact"] .board-stage {
+  grid-template-columns: minmax(0, 1fr) 15.5rem;
+  gap: 0.85rem;
+}
+
+body[data-layout="desktop-compact"] .hud {
+  padding: 0.78rem;
+}
+
+body[data-layout="desktop-compact"] .launcher-panel {
+  padding: 0.82rem;
+}
+
+body[data-layout="desktop-wide"] .game-card {
+  width: min(100%, 90rem);
+}
+
+body[data-layout="desktop-wide"] .board-stage {
+  grid-template-columns: minmax(0, 1fr) 19rem;
+}
+
+body[data-layout="desktop-wide"] .board-header h1 {
+  font-size: clamp(1.8rem, 2.6vw, 2.5rem);
 }
 
 body[data-layout="desktop-wide"] .slot-bubble {
-  width: 3.3rem;
-  height: 3.3rem;
+  width: 3.35rem;
+  height: 3.35rem;
 }
 
 body[data-layout="desktop-wide"] .slot-bubble-large {
-  width: 3.8rem;
-  height: 3.8rem;
+  width: 3.9rem;
+  height: 3.9rem;
 }
 
 body[data-layout="phone-portrait"] .page-glow {
@@ -735,8 +720,27 @@ body[data-layout="phone-portrait"] .app-shell {
 body[data-layout="phone-portrait"] .game-card {
   width: 100%;
   height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 0.15rem);
-  max-height: none;
   border-radius: 1.1rem;
+}
+
+body[data-layout="phone-portrait"] .board-stage {
+  grid-template-columns: 1fr;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 0.45rem;
+  padding: 0.5rem;
+}
+
+body[data-layout="phone-portrait"] .board-main {
+  gap: 0.45rem;
+}
+
+body[data-layout="phone-portrait"] .board-header {
+  display: none;
+}
+
+body[data-layout="phone-portrait"] .side-panel {
+  grid-template-rows: auto auto;
+  gap: 0.45rem;
 }
 
 body[data-layout="phone-portrait"] .hud {
@@ -762,19 +766,7 @@ body[data-layout="phone-portrait"] .hud-value {
 }
 
 body[data-layout="phone-portrait"] .hud-button {
-  grid-column: auto;
-  padding: 0.35rem 0.2rem;
   font-size: 0.82rem;
-  box-shadow: none;
-}
-
-body[data-layout="phone-portrait"] .board-stage {
-  gap: 0.45rem;
-  padding: 0.5rem;
-}
-
-body[data-layout="phone-portrait"] .board-header {
-  display: none;
 }
 
 body[data-layout="phone-portrait"] .canvas-frame {
@@ -787,15 +779,12 @@ body[data-layout="phone-portrait"] .game-canvas {
 }
 
 body[data-layout="phone-portrait"] .launcher-panel {
+  height: auto;
   grid-template-columns: 4rem minmax(0, 1fr) 4rem;
+  grid-template-areas: "current center next";
   gap: 0.45rem;
   padding: 0.55rem 0.6rem;
   border-radius: 1rem;
-}
-
-body[data-layout="phone-portrait"] .launcher-center {
-  grid-column: auto;
-  order: 0;
 }
 
 body[data-layout="phone-portrait"] .launcher-slot {
