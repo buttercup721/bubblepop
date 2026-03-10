@@ -32,10 +32,10 @@
 
   const CONFIG = {
     viewWidth: 420,
-    viewHeight: 760,
+    viewHeight: 700,
     fieldLeft: 18,
     fieldRight: 402,
-    topPadding: 78,
+    topPadding: 72,
     bubbleRadius: 22,
     columns: 8,
     rowStep: 38,
@@ -45,11 +45,14 @@
     missLimit: 5,
     projectileSpeed: 760,
     launcherX: 210,
-    launcherY: 686,
-    dangerLineY: 580,
+    launcherY: 632,
+    dangerLineY: 534,
     boardSearchRows: 20,
     colors: ["#ff6b6b", "#ffd166", "#4ecdc4", "#5f7bff", "#c77dff"],
   };
+
+  canvas.width = CONFIG.viewWidth;
+  canvas.height = CONFIG.viewHeight;
 
   const BUBBLE_DIAMETER = CONFIG.bubbleRadius * 2;
   const GRID_START_X = (CONFIG.viewWidth - (CONFIG.columns * BUBBLE_DIAMETER + CONFIG.bubbleRadius)) / 2 + CONFIG.bubbleRadius;
@@ -1192,7 +1195,7 @@
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.fillStyle = "rgba(255, 140, 140, 0.9)";
-    ctx.font = "700 14px Trebuchet MS";
+    ctx.font = "700 16px Trebuchet MS";
     ctx.fillText("위험선", CONFIG.fieldRight - 58, CONFIG.dangerLineY - 8);
     ctx.restore();
 
@@ -1213,10 +1216,10 @@
     ctx.lineWidth = 1.4;
     ctx.stroke();
     ctx.fillStyle = "rgba(124, 245, 214, 0.94)";
-    ctx.font = "700 13px Trebuchet MS";
+    ctx.font = "700 15px Trebuchet MS";
     ctx.fillText(`${PLAYER_NAME} CUSTOM`, CONFIG.fieldLeft + 28, 54);
     ctx.fillStyle = "rgba(255, 255, 255, 0.78)";
-    ctx.font = "700 11px Trebuchet MS";
+    ctx.font = "700 12px Trebuchet MS";
     ctx.fillText(getStageTheme(state.stage), CONFIG.fieldLeft + 28, 71);
     ctx.restore();
   }
@@ -1320,7 +1323,7 @@
     if (state.nextBubble) {
       drawBubble(CONFIG.fieldRight - 40, CONFIG.launcherY + 6, state.nextBubble.color, 18, 0.9);
       ctx.fillStyle = "rgba(255, 255, 255, 0.72)";
-      ctx.font = "700 12px Trebuchet MS";
+      ctx.font = "700 14px Trebuchet MS";
       ctx.fillText("NEXT", CONFIG.fieldRight - 61, CONFIG.launcherY - 25);
     }
   }
@@ -1340,7 +1343,7 @@
       ctx.save();
       ctx.globalAlpha = clamp(popup.life, 0, 1);
       ctx.fillStyle = popup.color;
-      ctx.font = "700 22px Trebuchet MS";
+      ctx.font = "700 26px Trebuchet MS";
       ctx.textAlign = "center";
       ctx.fillText(popup.text, popup.x, popup.y);
       ctx.restore();
@@ -1369,7 +1372,7 @@
   function drawMissCounter() {
     ctx.save();
     ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
-    ctx.font = "700 14px Trebuchet MS";
+    ctx.font = "700 16px Trebuchet MS";
     ctx.fillText(`${PLAYER_NAME}\uC758 \uC2E4\uC218 ${state.missStreak}/${CONFIG.missLimit}`, CONFIG.fieldLeft + 18, CONFIG.launcherY - 30);
     ctx.restore();
   }
@@ -1506,6 +1509,20 @@
     window.visualViewport.addEventListener("resize", requestResponsiveLayout);
     window.visualViewport.addEventListener("scroll", requestResponsiveLayout);
   }
+
+  if (window.ResizeObserver) {
+    const layoutObserver = new ResizeObserver(() => {
+      requestResponsiveLayout();
+    });
+    [appShell, gameCard, boardStage, canvasFrame, launcherPanel, hud].forEach((element) => {
+      if (element) {
+        layoutObserver.observe(element);
+      }
+    });
+  }
+
+  window.addEventListener("load", requestResponsiveLayout);
+  window.setTimeout(requestResponsiveLayout, 0);
 
   document.addEventListener("keydown", (event) => {
     if (event.code === "Space") {

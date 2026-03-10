@@ -429,23 +429,24 @@ body {
   min-height: 100dvh;
   overscroll-behavior-y: none;
   -webkit-tap-highlight-color: transparent;
+  overflow-y: auto;
 }
 
 .app-shell {
   min-height: 100dvh;
   display: grid;
-  align-items: stretch;
+  align-items: start;
   justify-items: center;
   padding:
-    calc(0.65rem + env(safe-area-inset-top))
-    calc(0.65rem + env(safe-area-inset-right))
-    calc(0.65rem + env(safe-area-inset-bottom))
-    calc(0.65rem + env(safe-area-inset-left));
+    calc(0.28rem + env(safe-area-inset-top))
+    calc(0.28rem + env(safe-area-inset-right))
+    calc(0.28rem + env(safe-area-inset-bottom))
+    calc(0.28rem + env(safe-area-inset-left));
 }
 
 .game-card {
-  width: min(100%, 88rem);
-  height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 0.2rem);
+  width: min(100%, 96rem);
+  height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 0.08rem);
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -455,9 +456,9 @@ body {
 .board-stage {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 18rem;
-  gap: 1rem;
-  padding: 1rem;
+  grid-template-columns: minmax(0, 1fr) 15.5rem;
+  gap: 0.7rem;
+  padding: 0.7rem;
   flex: 1 1 auto;
   min-height: 0;
 }
@@ -465,8 +466,8 @@ body {
 .board-main {
   min-height: 0;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 0.8rem;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
 }
 
 .side-panel {
@@ -474,24 +475,36 @@ body {
   min-height: 0;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: 0.8rem;
+  gap: 0.65rem;
+  overflow: auto;
+  padding-right: 0.12rem;
+  scrollbar-width: thin;
 }
 
 .hud {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.65rem;
-  padding: 0.85rem;
+  gap: 0.5rem;
+  padding: 0.7rem;
   border-bottom: 0;
-  border-radius: 1.25rem;
+  border-radius: 1.05rem;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .hud-item {
-  min-height: 3.8rem;
+  min-height: 3.3rem;
+  padding: 0.62rem 0.68rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
+}
+
+.hud-label {
+  font-size: 0.74rem;
+}
+
+.hud-value {
+  font-size: 1.24rem;
 }
 
 .hud-button,
@@ -504,26 +517,19 @@ body {
   justify-content: center;
   line-height: 1.1;
   white-space: nowrap;
-  font-size: 0.98rem;
+  font-size: 1rem;
   touch-action: manipulation;
 }
 
 .hud-button {
   align-self: stretch;
+  padding: 0.6rem 0.75rem;
   box-shadow: none;
 }
 
 .board-header {
   margin-bottom: 0;
   align-items: center;
-}
-
-.board-header h1 {
-  font-size: clamp(1.65rem, 2.4vw, 2.35rem);
-}
-
-.board-tip {
-  max-width: 16rem;
 }
 
 .canvas-frame {
@@ -534,7 +540,8 @@ body {
   min-height: 0;
   height: 100%;
   overflow: hidden;
-  padding: 0.65rem;
+  padding: 0.38rem;
+  border-radius: 1.18rem;
 }
 
 .game-canvas {
@@ -551,20 +558,28 @@ body {
 }
 
 .overlay-card {
-  max-height: min(100%, 38rem);
+  max-height: min(100%, 40rem);
   overflow: auto;
 }
 
+.overlay-copy,
+.overlay-list {
+  font-size: 1rem;
+}
+
 .launcher-panel {
-  height: 100%;
+  height: auto;
+  min-height: 0;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-areas:
-    "center center"
-    "current next";
-  gap: 0.85rem;
+    "current next"
+    "center center";
+  gap: 0.7rem;
   margin-top: 0;
-  padding: 0.95rem;
+  padding: 0.82rem;
   align-content: start;
+  border-radius: 1.05rem;
+  overflow: auto;
 }
 
 .launcher-panel > .launcher-slot:first-child {
@@ -581,127 +596,144 @@ body {
   align-self: start;
 }
 
+.launcher-slot {
+  gap: 0.35rem;
+}
+
 .slot-label {
-  font-size: 0.8rem;
+  font-size: 0.84rem;
 }
 
 .slot-bubble {
-  width: 3.1rem;
-  height: 3.1rem;
+  width: 3.15rem;
+  height: 3.15rem;
 }
 
 .slot-bubble-large {
-  width: 3.6rem;
-  height: 3.6rem;
-}
-
-.launcher-status {
-  min-height: 4.2em;
-  font-size: 0.96rem;
-  line-height: 1.4;
-}
-
-.meter-row {
-  font-size: 0.84rem;
+  width: 3.65rem;
+  height: 3.65rem;
 }
 
 .stage-flavor {
   min-height: auto;
-  font-size: 0.9rem;
+  margin-bottom: 0.28rem;
+  font-size: 1.02rem;
 }
 
-@media (max-height: 860px) {
-  body:not([data-layout="phone-portrait"]) .app-shell {
-    padding:
-      calc(0.45rem + env(safe-area-inset-top))
-      calc(0.45rem + env(safe-area-inset-right))
-      calc(0.45rem + env(safe-area-inset-bottom))
-      calc(0.45rem + env(safe-area-inset-left));
-  }
+.launcher-status {
+  min-height: 4.8em;
+  margin-bottom: 0.68rem;
+  font-size: 1.08rem;
+  line-height: 1.56;
+}
 
-  body:not([data-layout="phone-portrait"]) .eyebrow,
-  body:not([data-layout="phone-portrait"]) .dedication-chip,
-  body:not([data-layout="phone-portrait"]) .board-tip {
-    display: none;
-  }
+.meter-row {
+  gap: 0.55rem;
+  font-size: 0.92rem;
+}
 
-  body:not([data-layout="phone-portrait"]) .board-header h1 {
-    font-size: clamp(1.35rem, 2vw, 1.8rem);
-  }
+.meter-track {
+  height: 0.62rem;
+}
 
-  body:not([data-layout="phone-portrait"]) .board-stage {
-    gap: 0.75rem;
-    padding: 0.75rem;
-  }
-
-  body:not([data-layout="phone-portrait"]) .hud {
-    padding: 0.72rem;
-    gap: 0.55rem;
-  }
-
-  body:not([data-layout="phone-portrait"]) .hud-item,
-  body:not([data-layout="phone-portrait"]) .hud-button {
-    min-height: 3.35rem;
-  }
-
-  body:not([data-layout="phone-portrait"]) .launcher-panel {
-    padding: 0.75rem;
-    gap: 0.65rem;
-  }
-
-  body:not([data-layout="phone-portrait"]) .launcher-status {
-    min-height: 3.2em;
-    font-size: 0.88rem;
-  }
-
-  body:not([data-layout="phone-portrait"]) .slot-bubble {
-    width: 2.8rem;
-    height: 2.8rem;
-  }
-
-  body:not([data-layout="phone-portrait"]) .slot-bubble-large {
-    width: 3.2rem;
-    height: 3.2rem;
-  }
+body[data-layout="desktop-compact"] .board-header,
+body[data-layout="desktop-wide"] .board-header {
+  display: none;
 }
 
 body[data-layout="desktop-compact"] .game-card {
-  width: min(100%, 76rem);
+  width: min(100%, 82rem);
 }
 
 body[data-layout="desktop-compact"] .board-stage {
-  grid-template-columns: minmax(0, 1fr) 15.5rem;
-  gap: 0.85rem;
-}
-
-body[data-layout="desktop-compact"] .hud {
-  padding: 0.78rem;
-}
-
-body[data-layout="desktop-compact"] .launcher-panel {
-  padding: 0.82rem;
+  grid-template-columns: minmax(0, 1fr) 14.25rem;
 }
 
 body[data-layout="desktop-wide"] .game-card {
-  width: min(100%, 90rem);
+  width: min(100%, 108rem);
 }
 
 body[data-layout="desktop-wide"] .board-stage {
-  grid-template-columns: minmax(0, 1fr) 19rem;
+  grid-template-columns: minmax(0, 1fr) 16.5rem;
 }
 
-body[data-layout="desktop-wide"] .board-header h1 {
-  font-size: clamp(1.8rem, 2.6vw, 2.5rem);
+body[data-layout="desktop-wide"] .launcher-status {
+  font-size: 1.12rem;
 }
 
-body[data-layout="desktop-wide"] .slot-bubble {
-  width: 3.35rem;
-  height: 3.35rem;
-}
+@media (max-height: 900px) {
+  body:not([data-layout="phone-portrait"]) .app-shell {
+    padding:
+      calc(0.18rem + env(safe-area-inset-top))
+      calc(0.18rem + env(safe-area-inset-right))
+      calc(0.18rem + env(safe-area-inset-bottom))
+      calc(0.18rem + env(safe-area-inset-left));
+  }
 
-body[data-layout="desktop-wide"] .slot-bubble-large {
-  width: 3.9rem;
-  height: 3.9rem;
+  body:not([data-layout="phone-portrait"]) .game-card {
+    height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 0.02rem);
+  }
+
+  body:not([data-layout="phone-portrait"]) .board-stage {
+    gap: 0.55rem;
+    padding: 0.55rem;
+  }
+
+  body:not([data-layout="phone-portrait"]) .hud {
+    gap: 0.42rem;
+    padding: 0.58rem;
+  }
+
+  body:not([data-layout="phone-portrait"]) .hud-item {
+    min-height: 3rem;
+    padding: 0.5rem 0.58rem;
+  }
+
+  body:not([data-layout="phone-portrait"]) .hud-label {
+    font-size: 0.68rem;
+  }
+
+  body:not([data-layout="phone-portrait"]) .hud-value {
+    font-size: 1.12rem;
+  }
+
+  body:not([data-layout="phone-portrait"]) .hud-button {
+    min-height: 44px;
+    font-size: 0.92rem;
+  }
+
+  body:not([data-layout="phone-portrait"]) .canvas-frame {
+    padding: 0.28rem;
+  }
+
+  body:not([data-layout="phone-portrait"]) .launcher-panel {
+    gap: 0.55rem;
+    padding: 0.65rem;
+  }
+
+  body:not([data-layout="phone-portrait"]) .slot-bubble {
+    width: 2.85rem;
+    height: 2.85rem;
+  }
+
+  body:not([data-layout="phone-portrait"]) .slot-bubble-large {
+    width: 3.25rem;
+    height: 3.25rem;
+  }
+
+  body:not([data-layout="phone-portrait"]) .stage-flavor {
+    font-size: 0.94rem;
+  }
+
+  body:not([data-layout="phone-portrait"]) .launcher-status {
+    min-height: 4.2em;
+    font-size: 1rem;
+    line-height: 1.48;
+  }
+
+  body:not([data-layout="phone-portrait"]) .meter-row {
+    font-size: 0.82rem;
+  }
 }
 
 body[data-layout="phone-portrait"] .page-glow {
@@ -741,6 +773,8 @@ body[data-layout="phone-portrait"] .board-header {
 body[data-layout="phone-portrait"] .side-panel {
   grid-template-rows: auto auto;
   gap: 0.45rem;
+  overflow: visible;
+  padding-right: 0;
 }
 
 body[data-layout="phone-portrait"] .hud {
@@ -785,6 +819,7 @@ body[data-layout="phone-portrait"] .launcher-panel {
   gap: 0.45rem;
   padding: 0.55rem 0.6rem;
   border-radius: 1rem;
+  overflow: visible;
 }
 
 body[data-layout="phone-portrait"] .launcher-slot {
