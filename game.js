@@ -79,6 +79,7 @@
       secondary: "#6b211f",
       aura: "rgba(255, 166, 108, 0.32)",
       expressions: ["cold", "glare", "smirk", "amused"],
+      portraitVariants: ["cellCloseup", "clinicalSmile", "shadowGlare"],
     },
     {
       name: "\uC708\uD130",
@@ -87,6 +88,7 @@
       secondary: "#bfd3ff",
       aura: "rgba(173, 231, 255, 0.34)",
       expressions: ["smile", "wink", "focus", "surprised"],
+      portraitVariants: ["redWave", "violetStage", "softBob"],
     },
     {
       name: "\uACE0\uC2A4\uD2B8\uD398\uC774\uC2A4",
@@ -654,6 +656,261 @@
     return array[Math.floor(randomFn() * array.length)];
   }
 
+  const bossPortraitCache = new Map();
+
+  function createSvgDataUrl(svgMarkup) {
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgMarkup)}`;
+  }
+
+  function getBossPortraitVariantPool(kind) {
+    if (kind === "hannibal") {
+      return ["cellCloseup", "clinicalSmile", "shadowGlare"];
+    }
+    if (kind === "winter") {
+      return ["redWave", "violetStage", "softBob"];
+    }
+    return [];
+  }
+
+  function pickBossPortraitVariant(boss, actionKey = "") {
+    const pool = boss && boss.portraitVariants && boss.portraitVariants.length > 0
+      ? boss.portraitVariants
+      : getBossPortraitVariantPool(boss ? boss.kind : "");
+    if (!pool || pool.length === 0) {
+      return "";
+    }
+
+    const mapped = {
+      hannibal: {
+        recolor: "shadowGlare",
+        add: "clinicalSmile",
+        shuffle: "cellCloseup",
+        cold: "clinicalSmile",
+        glare: "shadowGlare",
+        smirk: "cellCloseup",
+        amused: "clinicalSmile",
+      },
+      winter: {
+        recolor: "violetStage",
+        add: "redWave",
+        shuffle: "softBob",
+        smile: "softBob",
+        wink: "redWave",
+        focus: "violetStage",
+        surprised: "redWave",
+      },
+    };
+
+    const preferred = mapped[boss.kind] && mapped[boss.kind][actionKey];
+    if (preferred && pool.includes(preferred)) {
+      return preferred;
+    }
+
+    const candidates = pool.filter((variant) => variant !== boss.portraitVariant);
+    return randomFrom(candidates.length > 0 ? candidates : pool);
+  }
+
+  function buildHannibalPortraitSvg(variant) {
+    const setups = {
+      cellCloseup: {
+        bg1: "#704d59",
+        bg2: "#14203a",
+        coat: "#476994",
+        shirt: "#e7e6e4",
+        skin: "#d4aa98",
+        shadow: "#714b40",
+        hair: "#2b1f22",
+        eye: "#9fc0dc",
+        extra: `<rect x="210" y="0" width="46" height="256" fill="#d4c6bb"/><circle cx="236" cy="74" r="7" fill="#5d4d48"/>`,
+      },
+      clinicalSmile: {
+        bg1: "#92aba7",
+        bg2: "#364651",
+        coat: "#55728a",
+        shirt: "#dfe5e8",
+        skin: "#d9b3a2",
+        shadow: "#6b4a42",
+        hair: "#3b2c2f",
+        eye: "#8eadca",
+        extra: `<rect x="0" y="0" width="256" height="256" fill="url(#grain)" opacity="0.07"/>`,
+      },
+      shadowGlare: {
+        bg1: "#0f1829",
+        bg2: "#364359",
+        coat: "#425977",
+        shirt: "#d4dde7",
+        skin: "#cfa696",
+        shadow: "#593933",
+        hair: "#251a1e",
+        eye: "#9ab9d4",
+        extra: `<rect x="0" y="0" width="256" height="256" fill="#08111d" opacity="0.2"/><path d="M170 0 L256 0 L256 256 L196 256 Z" fill="#0a0d15" opacity="0.36"/>`,
+      },
+    };
+    const setup = setups[variant] || setups.clinicalSmile;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+      <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="${setup.bg1}"/>
+          <stop offset="100%" stop-color="${setup.bg2}"/>
+        </linearGradient>
+        <radialGradient id="skin" cx="45%" cy="26%" r="58%">
+          <stop offset="0%" stop-color="#f4d7cb"/>
+          <stop offset="60%" stop-color="${setup.skin}"/>
+          <stop offset="100%" stop-color="#81594b"/>
+        </radialGradient>
+        <linearGradient id="coat" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#8ea6c0"/>
+          <stop offset="55%" stop-color="${setup.coat}"/>
+          <stop offset="100%" stop-color="#2a3b55"/>
+        </linearGradient>
+        <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#000000" flood-opacity="0.28"/>
+        </filter>
+        <pattern id="grain" width="12" height="12" patternUnits="userSpaceOnUse">
+          <circle cx="2" cy="3" r="1" fill="#ffffff" opacity="0.18"/>
+          <circle cx="9" cy="7" r="1" fill="#ffffff" opacity="0.1"/>
+          <circle cx="6" cy="11" r="1" fill="#0c1118" opacity="0.12"/>
+        </pattern>
+      </defs>
+      <rect width="256" height="256" fill="url(#bg)"/>
+      ${setup.extra}
+      <ellipse cx="128" cy="228" rx="74" ry="16" fill="#0d1016" opacity="0.28"/>
+      <path d="M48 248 Q66 194 128 194 Q190 194 208 248 Z" fill="url(#coat)" filter="url(#softShadow)"/>
+      <path d="M91 184 L128 214 L165 184 L153 174 L128 190 L103 174 Z" fill="${setup.shirt}" opacity="0.95"/>
+      <path d="M82 58 Q94 30 128 25 Q162 30 174 58 L177 113 Q176 165 128 184 Q80 165 79 113 Z" fill="url(#skin)"/>
+      <path d="M74 65 Q84 18 128 18 Q173 18 182 65 L176 85 Q156 65 128 62 Q100 64 80 85 Z" fill="${setup.hair}"/>
+      <path d="M85 85 Q74 118 79 144 Q90 174 128 184 Q167 173 177 144 Q182 118 171 85 Q160 72 128 70 Q96 72 85 85 Z" fill="url(#skin)" opacity="0.97"/>
+      <path d="M84 116 Q95 137 95 153 Q84 144 82 126 Z" fill="${setup.shadow}" opacity="0.22"/>
+      <path d="M172 116 Q161 137 161 153 Q172 144 174 126 Z" fill="${setup.shadow}" opacity="0.2"/>
+      <path d="M92 106 Q108 95 121 102" stroke="#382222" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <path d="M135 102 Q148 95 164 106" stroke="#382222" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <ellipse cx="105" cy="112" rx="14" ry="9" fill="#f6f8fb"/>
+      <ellipse cx="151" cy="112" rx="14" ry="9" fill="#f6f8fb"/>
+      <circle cx="105" cy="113" r="6" fill="${setup.eye}"/>
+      <circle cx="151" cy="113" r="6" fill="${setup.eye}"/>
+      <circle cx="105" cy="113" r="2.7" fill="#1b1c22"/>
+      <circle cx="151" cy="113" r="2.7" fill="#1b1c22"/>
+      <circle cx="101" cy="109" r="1.5" fill="#ffffff"/>
+      <circle cx="147" cy="109" r="1.5" fill="#ffffff"/>
+      <path d="M128 118 Q123 138 128 152 Q133 138 128 118 Z" fill="#a87467" opacity="0.42"/>
+      <path d="M113 156 Q128 164 143 156" stroke="#7a4c42" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <path d="M114 160 Q128 166 142 160" stroke="#f4d8d1" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.42"/>
+      <path d="M95 64 Q111 50 128 50 Q145 50 162 64" stroke="#ffffff" stroke-width="3" opacity="0.12" fill="none"/>
+    </svg>`;
+  }
+
+  function buildWinterPortraitSvg(variant) {
+    const setups = {
+      redWave: {
+        bg1: "#f5dfe9",
+        bg2: "#f6bdc3",
+        hair1: "#8f4a43",
+        hair2: "#c86d5e",
+        skin: "#f7ded8",
+        outfit: "#101015",
+        sparkle: "#ffffff",
+        extra: `<circle cx="212" cy="48" r="26" fill="#ffffff" opacity="0.16"/><circle cx="42" cy="84" r="20" fill="#ffffff" opacity="0.1"/>`,
+      },
+      violetStage: {
+        bg1: "#8476cf",
+        bg2: "#e2b7d8",
+        hair1: "#85403d",
+        hair2: "#ba5d58",
+        skin: "#f7d7d8",
+        outfit: "#111320",
+        sparkle: "#f3ecff",
+        extra: `<circle cx="44" cy="44" r="28" fill="#ffffff" opacity="0.12"/><circle cx="198" cy="72" r="18" fill="#ffffff" opacity="0.16"/><circle cx="218" cy="134" r="14" fill="#ffffff" opacity="0.09"/>`,
+      },
+      softBob: {
+        bg1: "#111216",
+        bg2: "#ff4fb0",
+        hair1: "#725449",
+        hair2: "#a67562",
+        skin: "#f6ddd5",
+        outfit: "#f5f3f0",
+        sparkle: "#fbe9ff",
+        extra: `<rect x="0" y="0" width="256" height="256" fill="#0f1118" opacity="0.18"/><path d="M160 0 L256 0 L256 128 Q205 106 160 128 Z" fill="#57ffb0" opacity="0.34"/><path d="M0 130 Q56 100 110 130 L110 256 L0 256 Z" fill="#ff4fb0" opacity="0.32"/>`,
+      },
+    };
+    const setup = setups[variant] || setups.redWave;
+    const outfitStroke = variant === "softBob" ? "#f38ac5" : "rgba(255,255,255,0.18)";
+    const necklace = variant === "softBob"
+      ? `<circle cx="168" cy="110" r="8" fill="#f2f4ff" opacity="0.85"/>`
+      : `<path d="M94 186 Q128 205 162 186" stroke="#f6f1ff" stroke-width="4" fill="none" opacity="0.9"/>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+      <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="${setup.bg1}"/>
+          <stop offset="100%" stop-color="${setup.bg2}"/>
+        </linearGradient>
+        <linearGradient id="hair" x1="0" y1="0" x2="0.85" y2="1">
+          <stop offset="0%" stop-color="${setup.hair1}"/>
+          <stop offset="55%" stop-color="${setup.hair2}"/>
+          <stop offset="100%" stop-color="#5d362f"/>
+        </linearGradient>
+        <radialGradient id="skin" cx="50%" cy="26%" r="58%">
+          <stop offset="0%" stop-color="#fff7f6"/>
+          <stop offset="62%" stop-color="${setup.skin}"/>
+          <stop offset="100%" stop-color="#d7ada5"/>
+        </radialGradient>
+        <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#000000" flood-opacity="0.2"/>
+        </filter>
+      </defs>
+      <rect width="256" height="256" fill="url(#bg)"/>
+      ${setup.extra}
+      <ellipse cx="128" cy="228" rx="70" ry="14" fill="#090c14" opacity="0.2"/>
+      <path d="M48 248 Q68 196 128 194 Q188 196 208 248 Z" fill="${setup.outfit}" filter="url(#softShadow)"/>
+      <path d="M77 86 Q74 36 125 28 Q182 24 181 88 Q179 132 170 168 Q160 202 130 205 Q98 202 87 168 Q78 133 77 86 Z" fill="url(#skin)"/>
+      <path d="M67 84 Q69 24 127 16 Q185 22 189 88 Q185 114 178 134 Q170 156 165 198 L149 206 Q160 154 156 122 Q153 91 128 88 Q103 91 100 122 Q96 154 107 206 L91 198 Q86 156 78 134 Q71 114 67 84 Z" fill="url(#hair)"/>
+      <path d="M83 92 Q90 51 126 48 Q166 47 174 92 Q162 70 127 68 Q93 70 83 92 Z" fill="url(#skin)" opacity="0.96"/>
+      <path d="M84 73 Q98 42 126 41 Q153 41 170 73" stroke="#ffffff" stroke-width="2.5" opacity="0.16" fill="none"/>
+      <path d="M93 96 Q81 123 90 174" stroke="#7b5348" stroke-width="6" opacity="0.13" fill="none" stroke-linecap="round"/>
+      <path d="M163 96 Q175 123 166 174" stroke="#7b5348" stroke-width="6" opacity="0.11" fill="none" stroke-linecap="round"/>
+      <ellipse cx="102" cy="126" rx="13" ry="8.5" fill="#fffefe"/>
+      <ellipse cx="153" cy="126" rx="13" ry="8.5" fill="#fffefe"/>
+      <circle cx="102" cy="126" r="5.8" fill="#6f5547"/>
+      <circle cx="153" cy="126" r="5.8" fill="#6f5547"/>
+      <circle cx="102" cy="126" r="2.2" fill="#19151b"/>
+      <circle cx="153" cy="126" r="2.2" fill="#19151b"/>
+      <circle cx="99" cy="122" r="1.5" fill="#ffffff"/>
+      <circle cx="150" cy="122" r="1.5" fill="#ffffff"/>
+      <path d="M87 118 Q101 108 116 116" stroke="#4f2e2c" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <path d="M139 116 Q154 108 168 118" stroke="#4f2e2c" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <path d="M127 132 Q122 150 127 164 Q132 150 127 132 Z" fill="#d39f95" opacity="0.48"/>
+      <ellipse cx="96" cy="152" rx="11" ry="6" fill="#f4a7b8" opacity="0.32"/>
+      <ellipse cx="158" cy="152" rx="11" ry="6" fill="#f4a7b8" opacity="0.28"/>
+      <path d="M110 170 Q128 181 146 170" stroke="#f29bb2" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <path d="M111 173 Q128 178 145 173" stroke="#fff1f6" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.64"/>
+      <circle cx="76" cy="132" r="5" fill="${setup.sparkle}" opacity="0.9"/>
+      <circle cx="181" cy="132" r="5" fill="${setup.sparkle}" opacity="0.9"/>
+      ${necklace}
+      <path d="M76 132 Q66 96 86 74" stroke="url(#hair)" stroke-width="20" stroke-linecap="round" opacity="0.95" fill="none"/>
+      <path d="M178 132 Q188 96 168 74" stroke="url(#hair)" stroke-width="20" stroke-linecap="round" opacity="0.95" fill="none"/>
+      <path d="M78 204 Q95 190 108 191" stroke="${outfitStroke}" stroke-width="5" fill="none" opacity="0.9"/>
+      <path d="M147 191 Q171 188 190 204" stroke="${outfitStroke}" stroke-width="5" fill="none" opacity="0.9"/>
+    </svg>`;
+  }
+
+  function getBossPortraitImage(boss) {
+    if (!boss || (boss.kind !== "hannibal" && boss.kind !== "winter")) {
+      return null;
+    }
+    const variant = boss.portraitVariant || getBossPortraitVariantPool(boss.kind)[0];
+    const key = `${boss.kind}:${variant}`;
+    if (!bossPortraitCache.has(key)) {
+      const image = new Image();
+      image.decoding = "async";
+      image.src = createSvgDataUrl(
+        boss.kind === "hannibal"
+          ? buildHannibalPortraitSvg(variant)
+          : buildWinterPortraitSvg(variant)
+      );
+      bossPortraitCache.set(key, image);
+    }
+    return bossPortraitCache.get(key);
+  }
+
   function createEmptyBoard(rows = CONFIG.boardSearchRows) {
     return Array.from({ length: rows }, () => Array(CONFIG.columns).fill(null));
   }
@@ -828,7 +1085,8 @@
     const level = getBossLevel(stage);
     const profile = getBossProfile(level);
     const expressions = profile.expressions || [];
-    return {
+    const portraitVariants = profile.portraitVariants || [];
+    const boss = {
       level,
       name: profile.name,
       kind: profile.kind,
@@ -836,6 +1094,8 @@
       secondary: profile.secondary,
       auraColor: profile.aura,
       expressions,
+      portraitVariants,
+      portraitVariant: portraitVariants.length > 0 ? portraitVariants[(level - 1) % portraitVariants.length] : "",
       expression: expressions.length > 0 ? randomFrom(expressions) : "neutral",
       expressionElapsed: 0,
       nextExpressionDelay: expressions.length > 0 ? getBossExpressionDelay({ kind: profile.kind, expressions }) : 99,
@@ -849,6 +1109,10 @@
       actionElapsed: 0,
       nextActionDelay: getBossActionDelay(level),
     };
+    if (boss.portraitVariant) {
+      getBossPortraitImage(boss);
+    }
+    return boss;
   }
 
   function getStageFlavorLabel(stage) {
@@ -879,8 +1143,15 @@
     element.style.background = `radial-gradient(circle at 30% 30%, ${mixColor(color, 0.6)}, ${color} 55%, ${mixColor(color, -0.35)})`;
   }
 
+  function decodeUiText(message) {
+    if (typeof message !== "string" || !message.includes("\\u")) {
+      return message;
+    }
+    return message.replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+  }
+
   function updateStatus(message) {
-    statusText.textContent = message;
+    statusText.textContent = decodeUiText(message);
     requestResponsiveLayout();
   }
 
@@ -894,12 +1165,12 @@
     comboValue.textContent = `${state.combo}`;
     stageValue.textContent = getStageNumberLabel(state.stage);
     pauseButton.disabled = state.mode === "title";
-    pauseButton.textContent = state.mode === "paused" ? "\uACC4\uC18D\uD558\uAE30" : "\uC77C\uC2DC\uC815\uC9C0";
+    pauseButton.textContent = decodeUiText(state.mode === "paused" ? "\uACC4\uC18D\uD558\uAE30" : "\uC77C\uC2DC\uC815\uC9C0");
 
     if (stageFlavorText) {
-      stageFlavorText.textContent = state.mode === "title"
+      stageFlavorText.textContent = decodeUiText(state.mode === "title"
         ? `20\uAC1C \uC2A4\uD14C\uC774\uC9C0 \uCC4C\uB9B0\uC9C0\uAC00 \uC900\uBE44 \uC911\uC774\uC5D0\uC694.`
-        : getStageFlavorLabel(state.stage);
+        : getStageFlavorLabel(state.stage));
     }
 
     const descentProgress = state.mode === "title"
@@ -909,11 +1180,11 @@
   }
 
   function showOverlay(options) {
-    stateKicker.textContent = options.kicker;
-    stateTitle.textContent = options.title;
-    stateMessage.textContent = options.message;
-    primaryActionButton.textContent = options.primaryLabel;
-    secondaryActionButton.textContent = options.secondaryLabel;
+    stateKicker.textContent = decodeUiText(options.kicker);
+    stateTitle.textContent = decodeUiText(options.title);
+    stateMessage.textContent = decodeUiText(options.message);
+    primaryActionButton.textContent = decodeUiText(options.primaryLabel);
+    secondaryActionButton.textContent = decodeUiText(options.secondaryLabel);
     secondaryActionButton.style.display = options.secondaryLabel ? "inline-flex" : "none";
     homeActionButton.style.display = options.showHome === false ? "none" : "inline-flex";
     state.overlayPrimaryAction = options.primaryAction;
@@ -1065,7 +1336,7 @@
   }
 
   function addPopup(text, x, y, color) {
-    state.popups.push({ text, x, y, color, life: 1 });
+    state.popups.push({ text: decodeUiText(text), x, y, color, life: 1 });
   }
 
   function addParticles(x, y, color, amount) {
@@ -1124,21 +1395,22 @@
       return null;
     }
     const boss = state.boss;
+    const visuals = getBossVisualConfig(boss);
     const phase = boss.floatTime;
     let x = boss.x;
-    let y = Math.max(34, CONFIG.topPadding + state.boardOffsetY - 34) + Math.sin(phase) * 5;
+    let y = Math.max(18, CONFIG.topPadding + state.boardOffsetY - visuals.lift) + Math.sin(phase) * 5;
 
     if (boss.kind === "creeper") {
-      x += Math.sign(Math.sin(phase * 2.7)) * 2.2;
-      y += Math.sign(Math.cos(phase * 3.1)) * 1.6;
+      x += Math.sign(Math.sin(phase * 2.7)) * 2.4;
+      y += Math.sign(Math.cos(phase * 3.1)) * 1.8;
     } else if (boss.kind === "hannibal") {
-      y += Math.sin(phase * 0.7) * 2;
+      y += Math.sin(phase * 0.7) * 2.4;
     } else if (boss.kind === "winter") {
-      x += Math.sin(phase * 0.8) * 3;
-      y += Math.cos(phase * 1.6) * 2.4;
+      x += Math.sin(phase * 0.8) * 3.4;
+      y += Math.cos(phase * 1.6) * 2.6;
     } else if (boss.kind === "ghostface") {
-      x += Math.sin(phase * 1.1) * 4.5;
-      y += Math.cos(phase * 1.8) * 3.2;
+      x += Math.sin(phase * 1.1) * 4.8;
+      y += Math.cos(phase * 1.8) * 3.4;
     }
 
     return { x, y };
@@ -1156,6 +1428,10 @@
 
     if (boss.expressions && boss.expressions.length > 0) {
       boss.expression = pickBossExpression(boss, actionKey);
+      if (boss.portraitVariants && boss.portraitVariants.length > 0) {
+        boss.portraitVariant = pickBossPortraitVariant(boss, actionKey || boss.expression);
+        getBossPortraitImage(boss);
+      }
       boss.expressionElapsed = 0;
       boss.nextExpressionDelay = getBossExpressionDelay(boss);
     }
@@ -1254,8 +1530,10 @@
       return;
     }
     const boss = state.boss;
-    const leftBound = CONFIG.fieldLeft + 38;
-    const rightBound = CONFIG.fieldRight - 38;
+    const visuals = getBossVisualConfig(boss);
+    const halfWidth = visuals.halfWidth || 24 * visuals.scale;
+    const leftBound = CONFIG.fieldLeft + 10 + halfWidth;
+    const rightBound = CONFIG.fieldRight - 10 - halfWidth;
     const speedScale = boss.kind === "ghostface" ? 1.06 : boss.kind === "creeper" ? 0.96 : 1;
     boss.floatTime += dt * (1.8 + boss.level * 0.22);
     boss.x += boss.direction * boss.speed * speedScale * dt;
@@ -1274,6 +1552,10 @@
       boss.expressionElapsed += dt;
       if (boss.expressionElapsed >= boss.nextExpressionDelay) {
         boss.expression = pickBossExpression(boss);
+        if (boss.portraitVariants && boss.portraitVariants.length > 0) {
+          boss.portraitVariant = pickBossPortraitVariant(boss, boss.expression);
+          getBossPortraitImage(boss);
+        }
         boss.expressionElapsed = 0;
         boss.nextExpressionDelay = getBossExpressionDelay(boss);
       }
@@ -1869,421 +2151,482 @@
     ctx.restore();
   }
 
-  function drawBossAura(x, y, boss) {
-    const radius = 34 + boss.pulse * 8;
-    const aura = ctx.createRadialGradient(x, y, 8, x, y, radius);
+  function getBossVisualConfig(boss) {
+    if (!boss) {
+      return { scale: 1.42, lift: 56, auraRadius: 50, nameplateWidth: 144, nameplateY: 82, halfWidth: 32 };
+    }
+
+    if (boss.kind === "creeper") {
+      return { scale: 1.5, lift: 58, auraRadius: 52, nameplateWidth: 142, nameplateY: 82, halfWidth: 34 };
+    }
+    if (boss.kind === "hannibal") {
+      return { scale: 1.76, lift: 74, auraRadius: 62, nameplateWidth: 182, nameplateY: 98, halfWidth: 46 };
+    }
+    if (boss.kind === "winter") {
+      return { scale: 1.78, lift: 74, auraRadius: 64, nameplateWidth: 174, nameplateY: 98, halfWidth: 48 };
+    }
+    return { scale: 1.58, lift: 62, auraRadius: 58, nameplateWidth: 152, nameplateY: 88, halfWidth: 36 };
+  }
+
+  function drawBossAura(x, y, boss, visuals) {
+    const radius = visuals.auraRadius + boss.pulse * 12;
+    const aura = ctx.createRadialGradient(x, y, 10, x, y, radius);
     aura.addColorStop(0, boss.auraColor || "rgba(255, 132, 132, 0.32)");
+    aura.addColorStop(0.62, mixColor(boss.accent || "#ffffff", 0.18).replace("rgb", "rgba").replace(")", ", 0.12)"));
     aura.addColorStop(1, "rgba(255, 255, 255, 0)");
     ctx.fillStyle = aura;
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, Math.PI * 2);
     ctx.fill();
+
+    ctx.strokeStyle = `rgba(255, 255, 255, ${0.12 + boss.pulse * 0.1})`;
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.arc(x, y, radius - 8, 0, Math.PI * 2);
+    ctx.stroke();
   }
 
-  function drawBossNameplate(x, y, boss) {
+  function drawBossNameplate(x, y, boss, visuals) {
+    const width = visuals.nameplateWidth;
+    const yOffset = visuals.nameplateY;
     ctx.save();
-    ctx.fillStyle = "rgba(11, 16, 28, 0.68)";
-    ctx.fillRect(x - 54, y - 52, 108, 19);
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x - 54, y - 52, 108, 19);
+    ctx.fillStyle = "rgba(11, 16, 28, 0.74)";
+    roundRect(ctx, x - width / 2, y - yOffset, width, 24, 10);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.16)";
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
     ctx.fillStyle = mixColor(boss.accent || "#ffffff", 0.25);
-    ctx.font = "700 11px Trebuchet MS";
+    ctx.font = "700 12px Trebuchet MS";
     ctx.textAlign = "center";
-    ctx.fillText(boss.name, x, y - 39);
+    ctx.fillText(boss.name, x, y - yOffset + 16);
     ctx.restore();
   }
 
-  function drawCreeperBoss(x, y, boss) {
+  function drawCreeperBoss(x, y, boss, scale) {
     ctx.save();
-    ctx.translate(x, y);
-    const pulse = 1 + boss.pulse * 0.08;
+    ctx.translate(x, y + 8);
+    ctx.scale(scale, scale);
+    const pulse = 1 + boss.pulse * 0.09;
     ctx.scale(pulse, pulse);
 
-    for (let index = 0; index < 3; index += 1) {
-      ctx.fillStyle = `rgba(82, 255, 119, ${0.16 - index * 0.04})`;
-      ctx.fillRect(-28 - boss.direction * index * 5, -22 + index * 3, 14, 40 - index * 4);
+    for (let index = 0; index < 4; index += 1) {
+      ctx.fillStyle = `rgba(82, 255, 119, ${0.18 - index * 0.035})`;
+      ctx.fillRect(-30 - boss.direction * index * 5, -28 + index * 4, 16, 50 - index * 5);
     }
 
     if (boss.effectTimer > 0) {
       const energy = 1 - boss.effectTimer / 0.95;
-      for (let ring = 0; ring < 3; ring += 1) {
-        const size = 52 + ring * 10 + energy * 8;
-        ctx.strokeStyle = `rgba(123, 255, 111, ${0.34 - ring * 0.08})`;
+      for (let ring = 0; ring < 4; ring += 1) {
+        const size = 58 + ring * 10 + energy * 10;
+        ctx.strokeStyle = `rgba(123, 255, 111, ${0.34 - ring * 0.06})`;
         ctx.lineWidth = 2;
         ctx.strokeRect(-size / 2, -size / 2, size, size);
       }
-      for (let spark = 0; spark < 6; spark += 1) {
+      for (let spark = 0; spark < 9; spark += 1) {
         ctx.fillStyle = spark % 2 === 0 ? "#d8ff8f" : "#62ff89";
-        const phase = boss.floatTime * 3.2 + spark;
-        ctx.fillRect(Math.cos(phase) * 30 - 3, Math.sin(phase * 1.2) * 22 - 3, 6, 6);
+        const phase = boss.floatTime * 3.2 + spark * 0.7;
+        ctx.fillRect(Math.cos(phase) * 35 - 3, Math.sin(phase * 1.15) * 26 - 3, 6, 6);
       }
     }
 
-    const gradient = ctx.createLinearGradient(-24, -24, 24, 24);
-    gradient.addColorStop(0, "#9cfb7f");
-    gradient.addColorStop(0.55, "#4fbf50");
-    gradient.addColorStop(1, "#245f2d");
+    ctx.fillStyle = "#2d6f2f";
+    ctx.fillRect(-20, 18, 40, 18);
+    ctx.fillStyle = "#245f2d";
+    ctx.fillRect(-18, 32, 10, 16);
+    ctx.fillRect(8, 32, 10, 16);
+    ctx.fillRect(-6, 32, 12, 10);
+
+    const gradient = ctx.createLinearGradient(-28, -30, 28, 28);
+    gradient.addColorStop(0, "#a7ff8d");
+    gradient.addColorStop(0.5, "#56c95c");
+    gradient.addColorStop(1, "#255f30");
     ctx.fillStyle = gradient;
-    ctx.fillRect(-24, -24, 48, 48);
-    ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
-    ctx.fillRect(-18, -20, 12, 12);
+    ctx.fillRect(-28, -30, 56, 56);
+
+    const camo = [
+      [-20, -22, 9, 9, "#7fe06d"],
+      [-5, -26, 12, 10, "#6bc95f"],
+      [12, -18, 8, 8, "#80f07d"],
+      [-24, 0, 10, 10, "#347d35"],
+      [8, 8, 12, 8, "#356e35"],
+      [-2, 14, 9, 9, "#8ef481"],
+    ];
+    for (const [cx, cy, width, height, color] of camo) {
+      ctx.fillStyle = color;
+      ctx.fillRect(cx, cy, width, height);
+    }
+
     ctx.fillStyle = boss.secondary || "#234b28";
-    ctx.fillRect(-14, -10, 9, 11);
-    ctx.fillRect(5, -10, 9, 11);
-    ctx.fillRect(-5, 1, 10, 16);
-    ctx.fillRect(-14, 10, 9, 7);
-    ctx.fillRect(5, 10, 9, 7);
-    ctx.strokeStyle = "rgba(18, 41, 17, 0.75)";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(-24, -24, 48, 48);
-    ctx.restore();
-  }
+    ctx.fillRect(-16, -14, 10, 13);
+    ctx.fillRect(6, -14, 10, 13);
+    ctx.fillRect(-6, 0, 12, 18);
+    ctx.fillRect(-16, 11, 10, 7);
+    ctx.fillRect(6, 11, 10, 7);
 
-  function drawHannibalBoss(x, y, boss) {
-    const expression = boss.expression || "cold";
-    ctx.save();
-    ctx.translate(x, y + 2);
-
-    const face = ctx.createRadialGradient(-5, -12, 4, 0, 0, 26);
-    face.addColorStop(0, "#ffd8bf");
-    face.addColorStop(0.75, "#e7ad8e");
-    face.addColorStop(1, "#9f6753");
-
-    ctx.fillStyle = "rgba(36, 12, 12, 0.25)";
-    ctx.beginPath();
-    ctx.ellipse(0, 14, 18, 7, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = "#4b1c1b";
-    ctx.beginPath();
-    ctx.moveTo(-18, -5);
-    ctx.quadraticCurveTo(-15, -28, 0, -30);
-    ctx.quadraticCurveTo(15, -28, 18, -5);
-    ctx.lineTo(14, 6);
-    ctx.quadraticCurveTo(0, 11, -14, 6);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = face;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, 18, 23, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = "#f1bc9e";
-    ctx.beginPath();
-    ctx.ellipse(-17, -1, 3, 6, 0, 0, Math.PI * 2);
-    ctx.ellipse(17, -1, 3, 6, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    let browLeftY = -10;
-    let browRightY = -10;
-    let browTilt = 0.8;
-    let eyeScale = 1;
-    let mouthLift = 0;
-    if (expression === "glare") {
-      browLeftY = -12;
-      browRightY = -12;
-      browTilt = 2.2;
-      eyeScale = 0.72;
-    } else if (expression === "smirk") {
-      browLeftY = -11;
-      browRightY = -9;
-      browTilt = 1.1;
-      mouthLift = 2.5;
-    } else if (expression === "amused") {
-      browLeftY = -8;
-      browRightY = -8;
-      eyeScale = 1.1;
-      mouthLift = 1;
-    }
-
-    ctx.strokeStyle = "#341514";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.16)";
+    ctx.fillRect(-20, -24, 14, 12);
+    ctx.fillRect(6, -26, 8, 8);
+    ctx.strokeStyle = "rgba(18, 41, 17, 0.82)";
     ctx.lineWidth = 2.2;
-    ctx.beginPath();
-    ctx.moveTo(-12, browLeftY + browTilt);
-    ctx.lineTo(-4, browLeftY - browTilt);
-    ctx.moveTo(4, browRightY - browTilt);
-    ctx.lineTo(12, browRightY + browTilt);
-    ctx.stroke();
-
-    ctx.fillStyle = "#fffdf9";
-    ctx.beginPath();
-    ctx.ellipse(-8, -4, 4.6, 3.2 * eyeScale, 0, 0, Math.PI * 2);
-    ctx.ellipse(8, -4, 4.6, 3.2 * eyeScale, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#151827";
-    ctx.beginPath();
-    ctx.arc(-8, -4, 1.8, 0, Math.PI * 2);
-    ctx.arc(8, -4, 1.8, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.strokeStyle = "rgba(90, 47, 33, 0.52)";
-    ctx.lineWidth = 1.4;
-    ctx.beginPath();
-    ctx.moveTo(0, -1);
-    ctx.lineTo(-1, 7);
-    ctx.stroke();
-
-    ctx.fillStyle = "#a7adb8";
-    ctx.beginPath();
-    ctx.moveTo(-14, 4);
-    ctx.lineTo(14, 4);
-    ctx.lineTo(12, 18);
-    ctx.lineTo(-12, 18);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "#707887";
-    ctx.lineWidth = 1.6;
-    ctx.stroke();
-    ctx.strokeStyle = "#58606d";
-    ctx.beginPath();
-    ctx.moveTo(-9, 7);
-    ctx.lineTo(-9, 16);
-    ctx.moveTo(-3, 7);
-    ctx.lineTo(-3, 16);
-    ctx.moveTo(3, 7);
-    ctx.lineTo(3, 16);
-    ctx.moveTo(9, 7);
-    ctx.lineTo(9, 16);
-    ctx.stroke();
-    ctx.strokeStyle = "#8790a1";
-    ctx.beginPath();
-    ctx.moveTo(-14, 11);
-    ctx.lineTo(14, 11);
-    ctx.stroke();
-    ctx.strokeStyle = "#6f7481";
-    ctx.lineWidth = 2.1;
-    ctx.beginPath();
-    ctx.moveTo(-17, 6);
-    ctx.lineTo(-24, 2);
-    ctx.moveTo(17, 6);
-    ctx.lineTo(24, 2);
-    ctx.stroke();
-
-    ctx.strokeStyle = `rgba(255, 214, 182, ${0.5 + mouthLift * 0.08})`;
-    ctx.lineWidth = 1.4;
-    ctx.beginPath();
-    ctx.arc(0, 16 - mouthLift * 0.2, 4.8, 0.15, Math.PI - 0.15);
-    ctx.stroke();
-
-    if (boss.effectTimer > 0) {
-      const gleam = 1 - boss.effectTimer / 0.95;
-      ctx.strokeStyle = `rgba(255, 242, 222, ${0.48 - gleam * 0.24})`;
-      ctx.lineWidth = 1.4;
-      ctx.beginPath();
-      ctx.moveTo(-8 + gleam * 8, 6);
-      ctx.lineTo(-1 + gleam * 8, 16);
-      ctx.stroke();
-    }
-
+    ctx.strokeRect(-28, -30, 56, 56);
     ctx.restore();
   }
 
-  function drawWinterBoss(x, y, boss) {
-    const expression = boss.expression || "smile";
+  function drawHannibalBoss(x, y, boss, scale) {
+    const expression = boss.expression || "cold";
+    const portrait = getBossPortraitImage(boss);
+    const variant = boss.portraitVariant || "clinicalSmile";
     ctx.save();
-    ctx.translate(x, y + 1);
+    ctx.translate(x, y + 12);
+    ctx.scale(scale, scale);
 
-    ctx.fillStyle = "rgba(140, 196, 255, 0.16)";
+    ctx.fillStyle = "rgba(14, 10, 11, 0.26)";
     ctx.beginPath();
-    ctx.ellipse(0, 14, 16, 6, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 28, 30, 8.5, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    const hair = ctx.createLinearGradient(-22, -28, 18, 18);
-    hair.addColorStop(0, "#f8fbff");
-    hair.addColorStop(0.45, "#d7e9ff");
-    hair.addColorStop(1, "#8eabd6");
-    ctx.fillStyle = hair;
-    ctx.beginPath();
-    ctx.moveTo(-18, -4);
-    ctx.quadraticCurveTo(-22, -30, 0, -30);
-    ctx.quadraticCurveTo(22, -30, 19, -4);
-    ctx.quadraticCurveTo(17, 22, 0, 24);
-    ctx.quadraticCurveTo(-17, 22, -18, -4);
-    ctx.closePath();
-    ctx.fill();
+    ctx.save();
+    const pulseScale = 1 + boss.pulse * 0.05;
+    ctx.scale(pulseScale, pulseScale);
 
-    ctx.fillStyle = "#fff2ee";
-    ctx.beginPath();
-    ctx.ellipse(0, 0, 17, 20, 0, 0, Math.PI * 2);
-    ctx.fill();
+    if (portrait && portrait.complete && portrait.naturalWidth > 0) {
+      ctx.drawImage(portrait, -54, -66, 108, 132);
+    } else {
+      const fallback = ctx.createLinearGradient(-26, -40, 26, 44);
+      fallback.addColorStop(0, "#d8b4a6");
+      fallback.addColorStop(1, "#705149");
+      ctx.fillStyle = fallback;
+      ctx.beginPath();
+      ctx.ellipse(0, -2, 24, 34, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
-    ctx.fillStyle = "rgba(255, 182, 198, 0.45)";
-    ctx.beginPath();
-    ctx.ellipse(-11, 5, 4.2, 2.8, 0, 0, Math.PI * 2);
-    ctx.ellipse(11, 5, 4.2, 2.8, 0, 0, Math.PI * 2);
-    ctx.fill();
+    if (variant === "shadowGlare") {
+      const shadow = ctx.createLinearGradient(8, -60, 56, 40);
+      shadow.addColorStop(0, "rgba(8, 12, 22, 0)");
+      shadow.addColorStop(1, "rgba(8, 12, 22, 0.42)");
+      ctx.fillStyle = shadow;
+      ctx.fillRect(0, -66, 56, 132);
+    } else if (variant === "clinicalSmile") {
+      ctx.strokeStyle = "rgba(224, 246, 248, 0.18)";
+      ctx.lineWidth = 1;
+      for (let band = 0; band < 4; band += 1) {
+        const lineY = -48 + band * 26 + Math.sin(boss.floatTime * 1.2 + band) * 2;
+        ctx.beginPath();
+        ctx.moveTo(-42, lineY);
+        ctx.lineTo(42, lineY - 2);
+        ctx.stroke();
+      }
+    } else {
+      ctx.fillStyle = "rgba(255, 228, 211, 0.1)";
+      ctx.fillRect(-56, -66, 20, 132);
+    }
 
-    ctx.fillStyle = hair;
-    ctx.beginPath();
-    ctx.moveTo(-17, -7);
-    ctx.quadraticCurveTo(-12, -20, -4, -18);
-    ctx.quadraticCurveTo(-1, -6, -3, 10);
-    ctx.lineTo(-17, 12);
-    ctx.closePath();
-    ctx.moveTo(17, -7);
-    ctx.quadraticCurveTo(12, -20, 4, -18);
-    ctx.quadraticCurveTo(1, -6, 3, 10);
-    ctx.lineTo(17, 12);
-    ctx.closePath();
-    ctx.fill();
+    let browLift = -17;
+    let browTilt = 2.4;
+    let lidDrop = 0.4;
+    let mouthMode = "flat";
+    if (expression === "glare") {
+      browLift = -19;
+      browTilt = 4.8;
+      lidDrop = 2;
+    } else if (expression === "smirk") {
+      browLift = -17;
+      browTilt = 3.1;
+      lidDrop = 1.1;
+      mouthMode = "smirk";
+    } else if (expression === "amused") {
+      browLift = -15;
+      browTilt = 1.4;
+      lidDrop = -0.2;
+      mouthMode = "smile";
+    }
 
-    ctx.strokeStyle = "rgba(120, 148, 193, 0.9)";
+    ctx.strokeStyle = "rgba(48, 27, 27, 0.82)";
+    ctx.lineWidth = 1.9;
+    ctx.beginPath();
+    ctx.moveTo(-18, browLift + browTilt);
+    ctx.lineTo(-4, browLift - browTilt);
+    ctx.moveTo(4, browLift - browTilt);
+    ctx.lineTo(18, browLift + browTilt);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.32)";
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    ctx.moveTo(-10, -16);
+    ctx.quadraticCurveTo(-6, -18 + lidDrop, -1, -15);
+    ctx.moveTo(1, -15);
+    ctx.quadraticCurveTo(6, -18 + lidDrop, 10, -16);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(19, 22, 28, 0.88)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.ellipse(-10, -8.5, 6.8, 2.5 + lidDrop * 0.15, 0, Math.PI * 0.1, Math.PI * 0.92);
+    ctx.ellipse(10, -8.5, 6.8, 2.5 + lidDrop * 0.15, 0, Math.PI * 0.08, Math.PI * 0.9);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(87, 48, 39, 0.66)";
     ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.moveTo(-12, -10);
-    ctx.quadraticCurveTo(-8, -17, -1, -18);
-    ctx.moveTo(12, -10);
-    ctx.quadraticCurveTo(8, -17, 1, -18);
+    ctx.moveTo(0, -2);
+    ctx.lineTo(-1.2, 9);
+    ctx.moveTo(-4, 10.5);
+    ctx.quadraticCurveTo(0, 13.2, 4, 10.5);
     ctx.stroke();
 
-    function drawOpenEye(centerX, irisColor, tall = 1) {
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.ellipse(centerX, -2, 5.2, 6.2 * tall, 0, 0, Math.PI * 2);
-      ctx.fill();
-      const iris = ctx.createRadialGradient(centerX - 1, -3, 1, centerX, -1, 5.5);
-      iris.addColorStop(0, "#f8fbff");
-      iris.addColorStop(0.45, irisColor);
-      iris.addColorStop(1, "#326db6");
-      ctx.fillStyle = iris;
-      ctx.beginPath();
-      ctx.ellipse(centerX, -1, 3.6, 4.4 * tall, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#15213b";
-      ctx.beginPath();
-      ctx.arc(centerX, -1, 1.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
-      ctx.beginPath();
-      ctx.arc(centerX - 1.2, -3.4, 0.9, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    if (expression === "wink") {
-      ctx.strokeStyle = "#51658e";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(-14, -2);
-      ctx.quadraticCurveTo(-9, -6, -5, -2);
-      ctx.stroke();
-      drawOpenEye(8, "#7ed4ff");
-    } else if (expression === "focus") {
-      drawOpenEye(-8, "#6bbef3", 0.82);
-      drawOpenEye(8, "#6bbef3", 0.82);
-      ctx.strokeStyle = "#53698e";
-      ctx.lineWidth = 1.4;
-      ctx.beginPath();
-      ctx.moveTo(-13, -10);
-      ctx.lineTo(-4, -12);
-      ctx.moveTo(4, -12);
-      ctx.lineTo(13, -10);
-      ctx.stroke();
-    } else if (expression === "surprised") {
-      drawOpenEye(-8, "#88dcff", 1.18);
-      drawOpenEye(8, "#88dcff", 1.18);
-    } else {
-      drawOpenEye(-8, "#7ed4ff");
-      drawOpenEye(8, "#7ed4ff");
-    }
-
-    ctx.strokeStyle = "rgba(92, 104, 145, 0.9)";
-    ctx.lineWidth = 1.3;
+    ctx.strokeStyle = mouthMode === "smile" ? "rgba(122, 68, 58, 0.88)" : "rgba(106, 59, 49, 0.84)";
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(-13, -10);
-    ctx.quadraticCurveTo(-8, -13, -4, -11);
-    ctx.moveTo(4, -11);
-    ctx.quadraticCurveTo(8, -13, 13, -10);
-    ctx.stroke();
-
-    ctx.strokeStyle = "#d987a8";
-    ctx.lineWidth = 1.6;
-    ctx.beginPath();
-    if (expression === "surprised") {
-      ctx.arc(0, 10, 2.8, 0, Math.PI * 2);
-    } else if (expression === "focus") {
-      ctx.moveTo(-4, 11);
-      ctx.lineTo(4, 11);
+    if (mouthMode === "smile") {
+      ctx.moveTo(-6, 17);
+      ctx.quadraticCurveTo(0, 20.8, 6, 17.2);
+    } else if (mouthMode === "smirk") {
+      ctx.moveTo(-6, 17.2);
+      ctx.quadraticCurveTo(-1, 18.1, 3, 17.6);
+      ctx.quadraticCurveTo(6.8, 16.4, 8.2, 14.5);
     } else {
-      ctx.arc(0, 9, 4.4, 0.15, Math.PI - 0.15);
+      ctx.moveTo(-5.4, 17.4);
+      ctx.quadraticCurveTo(0, 16.6, 5.8, 17.1);
     }
     ctx.stroke();
 
-    drawSparkle(-21, -18, 4, "rgba(214, 241, 255, 0.82)", boss.floatTime * 0.5);
-    drawSparkle(21, -12, 3.2, "rgba(214, 241, 255, 0.76)", -boss.floatTime * 0.6);
+    ctx.strokeStyle = "rgba(255, 228, 220, 0.24)";
+    ctx.beginPath();
+    ctx.moveTo(-4, 18.3);
+    ctx.lineTo(4, 17.9);
+    ctx.stroke();
+
     if (boss.effectTimer > 0) {
-      const alpha = 0.24 + boss.effectTimer * 0.12;
-      drawSparkle(-26, 4, 5, `rgba(173, 231, 255, ${alpha})`, boss.floatTime);
-      drawSparkle(26, 1, 4.6, `rgba(173, 231, 255, ${alpha})`, -boss.floatTime * 1.2);
+      const sweep = 1 - boss.effectTimer / 0.95;
+      ctx.strokeStyle = `rgba(182, 226, 255, ${0.48 - sweep * 0.22})`;
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(-28 + sweep * 32, -20);
+      ctx.lineTo(-10 + sweep * 32, 8);
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(255, 186, 132, ${0.22 + boss.effectTimer * 0.12})`;
+      ctx.beginPath();
+      ctx.moveTo(-40, -32 + sweep * 18);
+      ctx.lineTo(40, -36 + sweep * 12);
+      ctx.stroke();
     }
 
     ctx.restore();
+    ctx.restore();
   }
 
-  function drawGhostfaceBoss(x, y, boss) {
+  function drawWinterBoss(x, y, boss, scale) {
+    const expression = boss.expression || "smile";
+    const portrait = getBossPortraitImage(boss);
+    const variant = boss.portraitVariant || "redWave";
     ctx.save();
-    ctx.translate(x, y + 2);
+    ctx.translate(x, y + 12);
+    ctx.scale(scale, scale);
 
-    for (let trail = 0; trail < 3; trail += 1) {
-      const alpha = 0.16 - trail * 0.04;
+    ctx.fillStyle = "rgba(248, 190, 204, 0.16)";
+    ctx.beginPath();
+    ctx.ellipse(0, 28, 32, 8.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.save();
+    const pulseScale = 1 + boss.pulse * 0.045;
+    ctx.scale(pulseScale, pulseScale);
+
+    if (portrait && portrait.complete && portrait.naturalWidth > 0) {
+      ctx.drawImage(portrait, -56, -70, 112, 138);
+    } else {
+      const fallback = ctx.createLinearGradient(-24, -40, 24, 44);
+      fallback.addColorStop(0, "#ffe8ea");
+      fallback.addColorStop(1, "#d09b95");
+      ctx.fillStyle = fallback;
+      ctx.beginPath();
+      ctx.ellipse(0, -1, 24, 34, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    if (variant === "violetStage") {
+      for (let orb = 0; orb < 3; orb += 1) {
+        const orbX = -34 + orb * 28 + Math.sin(boss.floatTime + orb) * 2;
+        const orbY = -46 + orb * 11;
+        ctx.fillStyle = `rgba(255, 235, 255, ${0.08 + orb * 0.04})`;
+        ctx.beginPath();
+        ctx.arc(orbX, orbY, 10 + orb * 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (variant === "softBob") {
+      ctx.strokeStyle = "rgba(255, 121, 194, 0.35)";
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.moveTo(-38, 38);
+      ctx.quadraticCurveTo(-16, 18, -4, 23);
+      ctx.moveTo(6, 22);
+      ctx.quadraticCurveTo(22, 16, 42, 36);
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = "rgba(255, 245, 248, 0.12)";
+      ctx.fillRect(-54, -66, 18, 132);
+    }
+
+    function drawEye(centerX, open = 1, wink = false) {
+      if (wink) {
+        ctx.strokeStyle = "rgba(87, 52, 48, 0.9)";
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.moveTo(centerX - 5.6, -5);
+        ctx.quadraticCurveTo(centerX, -7.8, centerX + 5.6, -4.6);
+        ctx.stroke();
+        return;
+      }
+      ctx.strokeStyle = "rgba(70, 42, 39, 0.96)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(centerX - 6.2, -8.6);
+      ctx.quadraticCurveTo(centerX, -11.2, centerX + 6.2, -8.1);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.34)";
+      ctx.beginPath();
+      ctx.moveTo(centerX - 5.4, -7.4);
+      ctx.quadraticCurveTo(centerX, -9 + open * 0.5, centerX + 5.4, -7.3);
+      ctx.stroke();
+    }
+
+    let mouthMode = "smile";
+    if (expression === "wink") {
+      drawEye(-11, 1, true);
+      drawEye(11, 1.02, false);
+    } else if (expression === "focus") {
+      drawEye(-11, 0.76, false);
+      drawEye(11, 0.76, false);
+      mouthMode = "flat";
+    } else if (expression === "surprised") {
+      drawEye(-11, 1.12, false);
+      drawEye(11, 1.12, false);
+      mouthMode = "open";
+    } else {
+      drawEye(-11, 1, false);
+      drawEye(11, 1, false);
+    }
+
+    ctx.strokeStyle = "rgba(113, 71, 64, 0.46)";
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    ctx.moveTo(0, -1);
+    ctx.lineTo(-1, 9.4);
+    ctx.moveTo(-3.3, 11.3);
+    ctx.quadraticCurveTo(0, 13.4, 3.3, 11.3);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(242, 156, 179, 0.94)";
+    ctx.lineWidth = 1.7;
+    ctx.beginPath();
+    if (mouthMode === "open") {
+      ctx.ellipse(0, 19.8, 3.3, 4.2, 0, 0, Math.PI * 2);
+    } else if (mouthMode === "flat") {
+      ctx.moveTo(-5.4, 18.8);
+      ctx.lineTo(5.4, 18.8);
+    } else {
+      ctx.moveTo(-5.8, 18.2);
+      ctx.quadraticCurveTo(0, 21.8, 5.8, 18.2);
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(255, 247, 250, 0.64)";
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    ctx.moveTo(-2, 18.6);
+    ctx.lineTo(3, 19.2);
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+    ctx.beginPath();
+    ctx.arc(-21, -1, 1.4, 0, Math.PI * 2);
+    ctx.arc(21, -1, 1.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (boss.effectTimer > 0) {
+      const alpha = 0.28 + boss.effectTimer * 0.16;
+      drawSparkle(-34, -20, 5.6, `rgba(255, 231, 238, ${alpha})`, boss.floatTime * 0.6);
+      drawSparkle(34, -7, 4.9, `rgba(255, 231, 238, ${alpha})`, -boss.floatTime * 0.74);
+      if (variant === "softBob") {
+        drawSparkle(0, -42, 5.1, `rgba(255, 171, 215, ${alpha * 0.9})`, boss.floatTime * 0.4);
+      }
+    }
+
+    ctx.restore();
+    ctx.restore();
+  }
+
+  function drawGhostfaceBoss(x, y, boss, scale) {
+    ctx.save();
+    ctx.translate(x, y + 8);
+    ctx.scale(scale, scale);
+
+    for (let trail = 0; trail < 4; trail += 1) {
+      const alpha = 0.17 - trail * 0.035;
       ctx.fillStyle = `rgba(34, 39, 63, ${alpha})`;
       ctx.beginPath();
-      ctx.moveTo(-22 - boss.direction * trail * 4, -10 + trail * 3);
-      ctx.quadraticCurveTo(-34, 18, -14, 30 - trail * 2);
-      ctx.lineTo(14, 30 - trail * 2);
-      ctx.quadraticCurveTo(34, 18, 22 - boss.direction * trail * 4, -10 + trail * 3);
+      ctx.moveTo(-24 - boss.direction * trail * 5, -12 + trail * 3);
+      ctx.quadraticCurveTo(-40, 20, -16, 36 - trail * 3);
+      ctx.lineTo(16, 36 - trail * 3);
+      ctx.quadraticCurveTo(40, 20, 24 - boss.direction * trail * 5, -12 + trail * 3);
       ctx.closePath();
       ctx.fill();
     }
 
     ctx.fillStyle = "#0f1324";
     ctx.beginPath();
-    ctx.moveTo(-24, -6);
-    ctx.quadraticCurveTo(-20, -30, 0, -32);
-    ctx.quadraticCurveTo(20, -30, 24, -6);
-    ctx.quadraticCurveTo(28, 22, 0, 34);
-    ctx.quadraticCurveTo(-28, 22, -24, -6);
+    ctx.moveTo(-28, -10);
+    ctx.quadraticCurveTo(-24, -36, 0, -40);
+    ctx.quadraticCurveTo(24, -36, 28, -10);
+    ctx.quadraticCurveTo(34, 24, 0, 40);
+    ctx.quadraticCurveTo(-34, 24, -28, -10);
     ctx.closePath();
     ctx.fill();
 
-    ctx.fillStyle = "#fbfbff";
+    const mask = ctx.createLinearGradient(0, -26, 0, 24);
+    mask.addColorStop(0, "#ffffff");
+    mask.addColorStop(0.6, "#eff1ff");
+    mask.addColorStop(1, "#c8cce6");
+    ctx.fillStyle = mask;
     ctx.beginPath();
-    ctx.ellipse(0, -1, 14, 21, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, 16, 24, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = "#10131f";
+    ctx.fillStyle = "#111420";
     ctx.beginPath();
-    ctx.ellipse(-5, -7, 3.8, 5.8, 0.22, 0, Math.PI * 2);
-    ctx.ellipse(5, -7, 3.8, 5.8, -0.22, 0, Math.PI * 2);
+    ctx.ellipse(-6, -9, 4.4, 6.8, 0.22, 0, Math.PI * 2);
+    ctx.ellipse(6, -9, 4.4, 6.8, -0.22, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(0, 10, 4.2, 8.6, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 11, 4.6, 10, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.strokeStyle = "rgba(220, 224, 255, 0.3)";
-    ctx.lineWidth = 1.1;
+    ctx.strokeStyle = "rgba(220, 224, 255, 0.36)";
+    ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.moveTo(-14, -1);
-    ctx.quadraticCurveTo(0, 3, 14, -1);
+    ctx.moveTo(-15, -2);
+    ctx.quadraticCurveTo(0, 4, 15, -2);
     ctx.stroke();
 
     if (boss.effectTimer > 0) {
       const pulse = 1 - boss.effectTimer / 1.15;
       for (let ring = 0; ring < 3; ring += 1) {
-        ctx.strokeStyle = `rgba(214, 219, 255, ${0.3 - ring * 0.07})`;
-        ctx.lineWidth = 1.4;
+        ctx.strokeStyle = `rgba(214, 219, 255, ${0.32 - ring * 0.07})`;
+        ctx.lineWidth = 1.6;
         ctx.beginPath();
-        ctx.ellipse(0, 12, 8 + ring * 7 + pulse * 10, 5 + ring * 3 + pulse * 4, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, 12, 9 + ring * 8 + pulse * 12, 6 + ring * 3 + pulse * 4, 0, 0, Math.PI * 2);
         ctx.stroke();
       }
-      for (let wisp = 0; wisp < 4; wisp += 1) {
+      for (let wisp = 0; wisp < 5; wisp += 1) {
         const phase = boss.floatTime * 1.7 + wisp * 0.9;
-        ctx.strokeStyle = `rgba(160, 170, 255, ${0.22 - wisp * 0.03})`;
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = `rgba(160, 170, 255, ${0.22 - wisp * 0.025})`;
+        ctx.lineWidth = 2.2;
         ctx.beginPath();
-        ctx.moveTo(Math.cos(phase) * 16, -4 + wisp * 3);
-        ctx.quadraticCurveTo(Math.sin(phase) * 30, 8 + wisp * 4, Math.cos(phase * 1.1) * 20, 24 + wisp * 3);
+        ctx.moveTo(Math.cos(phase) * 18, -6 + wisp * 3);
+        ctx.quadraticCurveTo(Math.sin(phase) * 34, 9 + wisp * 4, Math.cos(phase * 1.1) * 22, 28 + wisp * 3);
         ctx.stroke();
       }
     }
@@ -2302,21 +2645,22 @@
 
     const { x, y } = bossPosition;
     const boss = state.boss;
+    const visuals = getBossVisualConfig(boss);
     ctx.save();
-    ctx.globalAlpha = 0.97;
-    drawBossAura(x, y, boss);
+    ctx.globalAlpha = 0.98;
+    drawBossAura(x, y, boss, visuals);
 
     if (boss.kind === "creeper") {
-      drawCreeperBoss(x, y, boss);
+      drawCreeperBoss(x, y, boss, visuals.scale);
     } else if (boss.kind === "hannibal") {
-      drawHannibalBoss(x, y, boss);
+      drawHannibalBoss(x, y, boss, visuals.scale);
     } else if (boss.kind === "winter") {
-      drawWinterBoss(x, y, boss);
+      drawWinterBoss(x, y, boss, visuals.scale);
     } else {
-      drawGhostfaceBoss(x, y, boss);
+      drawGhostfaceBoss(x, y, boss, visuals.scale);
     }
 
-    drawBossNameplate(x, y, boss);
+    drawBossNameplate(x, y, boss, visuals);
     ctx.restore();
   }
 
