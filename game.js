@@ -79,7 +79,7 @@
       secondary: "#6b211f",
       aura: "rgba(255, 166, 108, 0.32)",
       expressions: ["cold", "glare", "smirk", "amused"],
-      portraitVariants: ["cellCloseup", "clinicalSmile", "shadowGlare"],
+      portraitPath: "assets/bosses/hannibal-face.png",
     },
     {
       name: "\uC708\uD130",
@@ -88,7 +88,7 @@
       secondary: "#bfd3ff",
       aura: "rgba(173, 231, 255, 0.34)",
       expressions: ["smile", "wink", "focus", "surprised"],
-      portraitVariants: ["redWave", "violetStage", "softBob"],
+      portraitPath: "assets/bosses/winter-face.png",
     },
     {
       name: "\uACE0\uC2A4\uD2B8\uD398\uC774\uC2A4",
@@ -658,260 +658,23 @@
 
   const bossPortraitCache = new Map();
 
-  function createSvgDataUrl(svgMarkup) {
-    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgMarkup)}`;
-  }
-
-  function getBossPortraitVariantPool(kind) {
-    if (kind === "hannibal") {
-      return ["cellCloseup", "clinicalSmile", "shadowGlare"];
-    }
-    if (kind === "winter") {
-      return ["redWave", "violetStage", "softBob"];
-    }
-    return [];
-  }
-
-  function pickBossPortraitVariant(boss, actionKey = "") {
-    const pool = boss && boss.portraitVariants && boss.portraitVariants.length > 0
-      ? boss.portraitVariants
-      : getBossPortraitVariantPool(boss ? boss.kind : "");
-    if (!pool || pool.length === 0) {
-      return "";
-    }
-
-    const mapped = {
-      hannibal: {
-        recolor: "shadowGlare",
-        add: "clinicalSmile",
-        shuffle: "cellCloseup",
-        cold: "clinicalSmile",
-        glare: "shadowGlare",
-        smirk: "cellCloseup",
-        amused: "clinicalSmile",
-      },
-      winter: {
-        recolor: "violetStage",
-        add: "redWave",
-        shuffle: "softBob",
-        smile: "softBob",
-        wink: "redWave",
-        focus: "violetStage",
-        surprised: "redWave",
-      },
-    };
-
-    const preferred = mapped[boss.kind] && mapped[boss.kind][actionKey];
-    if (preferred && pool.includes(preferred)) {
-      return preferred;
-    }
-
-    const candidates = pool.filter((variant) => variant !== boss.portraitVariant);
-    return randomFrom(candidates.length > 0 ? candidates : pool);
-  }
-
-  function buildHannibalPortraitSvg(variant) {
-    const setups = {
-      cellCloseup: {
-        bg1: "#704d59",
-        bg2: "#14203a",
-        coat: "#476994",
-        shirt: "#e7e6e4",
-        skin: "#d4aa98",
-        shadow: "#714b40",
-        hair: "#2b1f22",
-        eye: "#9fc0dc",
-        extra: `<rect x="210" y="0" width="46" height="256" fill="#d4c6bb"/><circle cx="236" cy="74" r="7" fill="#5d4d48"/>`,
-      },
-      clinicalSmile: {
-        bg1: "#92aba7",
-        bg2: "#364651",
-        coat: "#55728a",
-        shirt: "#dfe5e8",
-        skin: "#d9b3a2",
-        shadow: "#6b4a42",
-        hair: "#3b2c2f",
-        eye: "#8eadca",
-        extra: `<rect x="0" y="0" width="256" height="256" fill="url(#grain)" opacity="0.07"/>`,
-      },
-      shadowGlare: {
-        bg1: "#0f1829",
-        bg2: "#364359",
-        coat: "#425977",
-        shirt: "#d4dde7",
-        skin: "#cfa696",
-        shadow: "#593933",
-        hair: "#251a1e",
-        eye: "#9ab9d4",
-        extra: `<rect x="0" y="0" width="256" height="256" fill="#08111d" opacity="0.2"/><path d="M170 0 L256 0 L256 256 L196 256 Z" fill="#0a0d15" opacity="0.36"/>`,
-      },
-    };
-    const setup = setups[variant] || setups.clinicalSmile;
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-      <defs>
-        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="${setup.bg1}"/>
-          <stop offset="100%" stop-color="${setup.bg2}"/>
-        </linearGradient>
-        <radialGradient id="skin" cx="45%" cy="26%" r="58%">
-          <stop offset="0%" stop-color="#f4d7cb"/>
-          <stop offset="60%" stop-color="${setup.skin}"/>
-          <stop offset="100%" stop-color="#81594b"/>
-        </radialGradient>
-        <linearGradient id="coat" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#8ea6c0"/>
-          <stop offset="55%" stop-color="${setup.coat}"/>
-          <stop offset="100%" stop-color="#2a3b55"/>
-        </linearGradient>
-        <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#000000" flood-opacity="0.28"/>
-        </filter>
-        <pattern id="grain" width="12" height="12" patternUnits="userSpaceOnUse">
-          <circle cx="2" cy="3" r="1" fill="#ffffff" opacity="0.18"/>
-          <circle cx="9" cy="7" r="1" fill="#ffffff" opacity="0.1"/>
-          <circle cx="6" cy="11" r="1" fill="#0c1118" opacity="0.12"/>
-        </pattern>
-      </defs>
-      <rect width="256" height="256" fill="url(#bg)"/>
-      ${setup.extra}
-      <ellipse cx="128" cy="228" rx="74" ry="16" fill="#0d1016" opacity="0.28"/>
-      <path d="M48 248 Q66 194 128 194 Q190 194 208 248 Z" fill="url(#coat)" filter="url(#softShadow)"/>
-      <path d="M91 184 L128 214 L165 184 L153 174 L128 190 L103 174 Z" fill="${setup.shirt}" opacity="0.95"/>
-      <path d="M82 58 Q94 30 128 25 Q162 30 174 58 L177 113 Q176 165 128 184 Q80 165 79 113 Z" fill="url(#skin)"/>
-      <path d="M74 65 Q84 18 128 18 Q173 18 182 65 L176 85 Q156 65 128 62 Q100 64 80 85 Z" fill="${setup.hair}"/>
-      <path d="M85 85 Q74 118 79 144 Q90 174 128 184 Q167 173 177 144 Q182 118 171 85 Q160 72 128 70 Q96 72 85 85 Z" fill="url(#skin)" opacity="0.97"/>
-      <path d="M84 116 Q95 137 95 153 Q84 144 82 126 Z" fill="${setup.shadow}" opacity="0.22"/>
-      <path d="M172 116 Q161 137 161 153 Q172 144 174 126 Z" fill="${setup.shadow}" opacity="0.2"/>
-      <path d="M92 106 Q108 95 121 102" stroke="#382222" stroke-width="4" stroke-linecap="round" fill="none"/>
-      <path d="M135 102 Q148 95 164 106" stroke="#382222" stroke-width="4" stroke-linecap="round" fill="none"/>
-      <ellipse cx="105" cy="112" rx="14" ry="9" fill="#f6f8fb"/>
-      <ellipse cx="151" cy="112" rx="14" ry="9" fill="#f6f8fb"/>
-      <circle cx="105" cy="113" r="6" fill="${setup.eye}"/>
-      <circle cx="151" cy="113" r="6" fill="${setup.eye}"/>
-      <circle cx="105" cy="113" r="2.7" fill="#1b1c22"/>
-      <circle cx="151" cy="113" r="2.7" fill="#1b1c22"/>
-      <circle cx="101" cy="109" r="1.5" fill="#ffffff"/>
-      <circle cx="147" cy="109" r="1.5" fill="#ffffff"/>
-      <path d="M128 118 Q123 138 128 152 Q133 138 128 118 Z" fill="#a87467" opacity="0.42"/>
-      <path d="M113 156 Q128 164 143 156" stroke="#7a4c42" stroke-width="4" stroke-linecap="round" fill="none"/>
-      <path d="M114 160 Q128 166 142 160" stroke="#f4d8d1" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.42"/>
-      <path d="M95 64 Q111 50 128 50 Q145 50 162 64" stroke="#ffffff" stroke-width="3" opacity="0.12" fill="none"/>
-    </svg>`;
-  }
-
-  function buildWinterPortraitSvg(variant) {
-    const setups = {
-      redWave: {
-        bg1: "#f5dfe9",
-        bg2: "#f6bdc3",
-        hair1: "#8f4a43",
-        hair2: "#c86d5e",
-        skin: "#f7ded8",
-        outfit: "#101015",
-        sparkle: "#ffffff",
-        extra: `<circle cx="212" cy="48" r="26" fill="#ffffff" opacity="0.16"/><circle cx="42" cy="84" r="20" fill="#ffffff" opacity="0.1"/>`,
-      },
-      violetStage: {
-        bg1: "#8476cf",
-        bg2: "#e2b7d8",
-        hair1: "#85403d",
-        hair2: "#ba5d58",
-        skin: "#f7d7d8",
-        outfit: "#111320",
-        sparkle: "#f3ecff",
-        extra: `<circle cx="44" cy="44" r="28" fill="#ffffff" opacity="0.12"/><circle cx="198" cy="72" r="18" fill="#ffffff" opacity="0.16"/><circle cx="218" cy="134" r="14" fill="#ffffff" opacity="0.09"/>`,
-      },
-      softBob: {
-        bg1: "#111216",
-        bg2: "#ff4fb0",
-        hair1: "#725449",
-        hair2: "#a67562",
-        skin: "#f6ddd5",
-        outfit: "#f5f3f0",
-        sparkle: "#fbe9ff",
-        extra: `<rect x="0" y="0" width="256" height="256" fill="#0f1118" opacity="0.18"/><path d="M160 0 L256 0 L256 128 Q205 106 160 128 Z" fill="#57ffb0" opacity="0.34"/><path d="M0 130 Q56 100 110 130 L110 256 L0 256 Z" fill="#ff4fb0" opacity="0.32"/>`,
-      },
-    };
-    const setup = setups[variant] || setups.redWave;
-    const outfitStroke = variant === "softBob" ? "#f38ac5" : "rgba(255,255,255,0.18)";
-    const necklace = variant === "softBob"
-      ? `<circle cx="168" cy="110" r="8" fill="#f2f4ff" opacity="0.85"/>`
-      : `<path d="M94 186 Q128 205 162 186" stroke="#f6f1ff" stroke-width="4" fill="none" opacity="0.9"/>`;
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-      <defs>
-        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="${setup.bg1}"/>
-          <stop offset="100%" stop-color="${setup.bg2}"/>
-        </linearGradient>
-        <linearGradient id="hair" x1="0" y1="0" x2="0.85" y2="1">
-          <stop offset="0%" stop-color="${setup.hair1}"/>
-          <stop offset="55%" stop-color="${setup.hair2}"/>
-          <stop offset="100%" stop-color="#5d362f"/>
-        </linearGradient>
-        <radialGradient id="skin" cx="50%" cy="26%" r="58%">
-          <stop offset="0%" stop-color="#fff7f6"/>
-          <stop offset="62%" stop-color="${setup.skin}"/>
-          <stop offset="100%" stop-color="#d7ada5"/>
-        </radialGradient>
-        <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#000000" flood-opacity="0.2"/>
-        </filter>
-      </defs>
-      <rect width="256" height="256" fill="url(#bg)"/>
-      ${setup.extra}
-      <ellipse cx="128" cy="228" rx="70" ry="14" fill="#090c14" opacity="0.2"/>
-      <path d="M48 248 Q68 196 128 194 Q188 196 208 248 Z" fill="${setup.outfit}" filter="url(#softShadow)"/>
-      <path d="M77 86 Q74 36 125 28 Q182 24 181 88 Q179 132 170 168 Q160 202 130 205 Q98 202 87 168 Q78 133 77 86 Z" fill="url(#skin)"/>
-      <path d="M67 84 Q69 24 127 16 Q185 22 189 88 Q185 114 178 134 Q170 156 165 198 L149 206 Q160 154 156 122 Q153 91 128 88 Q103 91 100 122 Q96 154 107 206 L91 198 Q86 156 78 134 Q71 114 67 84 Z" fill="url(#hair)"/>
-      <path d="M83 92 Q90 51 126 48 Q166 47 174 92 Q162 70 127 68 Q93 70 83 92 Z" fill="url(#skin)" opacity="0.96"/>
-      <path d="M84 73 Q98 42 126 41 Q153 41 170 73" stroke="#ffffff" stroke-width="2.5" opacity="0.16" fill="none"/>
-      <path d="M93 96 Q81 123 90 174" stroke="#7b5348" stroke-width="6" opacity="0.13" fill="none" stroke-linecap="round"/>
-      <path d="M163 96 Q175 123 166 174" stroke="#7b5348" stroke-width="6" opacity="0.11" fill="none" stroke-linecap="round"/>
-      <ellipse cx="102" cy="126" rx="13" ry="8.5" fill="#fffefe"/>
-      <ellipse cx="153" cy="126" rx="13" ry="8.5" fill="#fffefe"/>
-      <circle cx="102" cy="126" r="5.8" fill="#6f5547"/>
-      <circle cx="153" cy="126" r="5.8" fill="#6f5547"/>
-      <circle cx="102" cy="126" r="2.2" fill="#19151b"/>
-      <circle cx="153" cy="126" r="2.2" fill="#19151b"/>
-      <circle cx="99" cy="122" r="1.5" fill="#ffffff"/>
-      <circle cx="150" cy="122" r="1.5" fill="#ffffff"/>
-      <path d="M87 118 Q101 108 116 116" stroke="#4f2e2c" stroke-width="4" stroke-linecap="round" fill="none"/>
-      <path d="M139 116 Q154 108 168 118" stroke="#4f2e2c" stroke-width="4" stroke-linecap="round" fill="none"/>
-      <path d="M127 132 Q122 150 127 164 Q132 150 127 132 Z" fill="#d39f95" opacity="0.48"/>
-      <ellipse cx="96" cy="152" rx="11" ry="6" fill="#f4a7b8" opacity="0.32"/>
-      <ellipse cx="158" cy="152" rx="11" ry="6" fill="#f4a7b8" opacity="0.28"/>
-      <path d="M110 170 Q128 181 146 170" stroke="#f29bb2" stroke-width="4" stroke-linecap="round" fill="none"/>
-      <path d="M111 173 Q128 178 145 173" stroke="#fff1f6" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.64"/>
-      <circle cx="76" cy="132" r="5" fill="${setup.sparkle}" opacity="0.9"/>
-      <circle cx="181" cy="132" r="5" fill="${setup.sparkle}" opacity="0.9"/>
-      ${necklace}
-      <path d="M76 132 Q66 96 86 74" stroke="url(#hair)" stroke-width="20" stroke-linecap="round" opacity="0.95" fill="none"/>
-      <path d="M178 132 Q188 96 168 74" stroke="url(#hair)" stroke-width="20" stroke-linecap="round" opacity="0.95" fill="none"/>
-      <path d="M78 204 Q95 190 108 191" stroke="${outfitStroke}" stroke-width="5" fill="none" opacity="0.9"/>
-      <path d="M147 191 Q171 188 190 204" stroke="${outfitStroke}" stroke-width="5" fill="none" opacity="0.9"/>
-    </svg>`;
-  }
-
   function getBossPortraitImage(boss) {
-    if (!boss || (boss.kind !== "hannibal" && boss.kind !== "winter")) {
+    if (!boss || !boss.portraitPath) {
       return null;
     }
-    const variant = boss.portraitVariant || getBossPortraitVariantPool(boss.kind)[0];
-    const key = `${boss.kind}:${variant}`;
+
+    const key = boss.portraitPath;
     if (!bossPortraitCache.has(key)) {
       const image = new Image();
       image.decoding = "async";
-      image.src = createSvgDataUrl(
-        boss.kind === "hannibal"
-          ? buildHannibalPortraitSvg(variant)
-          : buildWinterPortraitSvg(variant)
-      );
+      image.src = key;
       bossPortraitCache.set(key, image);
     }
     return bossPortraitCache.get(key);
   }
 
   function createEmptyBoard(rows = CONFIG.boardSearchRows) {
+
     return Array.from({ length: rows }, () => Array(CONFIG.columns).fill(null));
   }
 
@@ -1085,7 +848,6 @@
     const level = getBossLevel(stage);
     const profile = getBossProfile(level);
     const expressions = profile.expressions || [];
-    const portraitVariants = profile.portraitVariants || [];
     const boss = {
       level,
       name: profile.name,
@@ -1094,8 +856,7 @@
       secondary: profile.secondary,
       auraColor: profile.aura,
       expressions,
-      portraitVariants,
-      portraitVariant: portraitVariants.length > 0 ? portraitVariants[(level - 1) % portraitVariants.length] : "",
+      portraitPath: profile.portraitPath || "",
       expression: expressions.length > 0 ? randomFrom(expressions) : "neutral",
       expressionElapsed: 0,
       nextExpressionDelay: expressions.length > 0 ? getBossExpressionDelay({ kind: profile.kind, expressions }) : 99,
@@ -1109,7 +870,7 @@
       actionElapsed: 0,
       nextActionDelay: getBossActionDelay(level),
     };
-    if (boss.portraitVariant) {
+    if (boss.portraitPath) {
       getBossPortraitImage(boss);
     }
     return boss;
@@ -1428,10 +1189,6 @@
 
     if (boss.expressions && boss.expressions.length > 0) {
       boss.expression = pickBossExpression(boss, actionKey);
-      if (boss.portraitVariants && boss.portraitVariants.length > 0) {
-        boss.portraitVariant = pickBossPortraitVariant(boss, actionKey || boss.expression);
-        getBossPortraitImage(boss);
-      }
       boss.expressionElapsed = 0;
       boss.nextExpressionDelay = getBossExpressionDelay(boss);
     }
@@ -1552,10 +1309,6 @@
       boss.expressionElapsed += dt;
       if (boss.expressionElapsed >= boss.nextExpressionDelay) {
         boss.expression = pickBossExpression(boss);
-        if (boss.portraitVariants && boss.portraitVariants.length > 0) {
-          boss.portraitVariant = pickBossPortraitVariant(boss, boss.expression);
-          getBossPortraitImage(boss);
-        }
         boss.expressionElapsed = 0;
         boss.nextExpressionDelay = getBossExpressionDelay(boss);
       }
@@ -2276,22 +2029,21 @@
   function drawHannibalBoss(x, y, boss, scale) {
     const expression = boss.expression || "cold";
     const portrait = getBossPortraitImage(boss);
-    const variant = boss.portraitVariant || "clinicalSmile";
     ctx.save();
-    ctx.translate(x, y + 12);
+    ctx.translate(x, y + 10);
     ctx.scale(scale, scale);
 
     ctx.fillStyle = "rgba(14, 10, 11, 0.26)";
     ctx.beginPath();
-    ctx.ellipse(0, 28, 30, 8.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 25, 24, 7.5, 0, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.save();
-    const pulseScale = 1 + boss.pulse * 0.05;
+    const pulseScale = 1 + boss.pulse * 0.04;
     ctx.scale(pulseScale, pulseScale);
 
     if (portrait && portrait.complete && portrait.naturalWidth > 0) {
-      ctx.drawImage(portrait, -54, -66, 108, 132);
+      ctx.drawImage(portrait, -39, -41, 78, 78);
     } else {
       const fallback = ctx.createLinearGradient(-26, -40, 26, 44);
       fallback.addColorStop(0, "#d8b4a6");
@@ -2302,115 +2054,83 @@
       ctx.fill();
     }
 
-    if (variant === "shadowGlare") {
-      const shadow = ctx.createLinearGradient(8, -60, 56, 40);
-      shadow.addColorStop(0, "rgba(8, 12, 22, 0)");
-      shadow.addColorStop(1, "rgba(8, 12, 22, 0.42)");
-      ctx.fillStyle = shadow;
-      ctx.fillRect(0, -66, 56, 132);
-    } else if (variant === "clinicalSmile") {
-      ctx.strokeStyle = "rgba(224, 246, 248, 0.18)";
-      ctx.lineWidth = 1;
-      for (let band = 0; band < 4; band += 1) {
-        const lineY = -48 + band * 26 + Math.sin(boss.floatTime * 1.2 + band) * 2;
-        ctx.beginPath();
-        ctx.moveTo(-42, lineY);
-        ctx.lineTo(42, lineY - 2);
-        ctx.stroke();
-      }
-    } else {
-      ctx.fillStyle = "rgba(255, 228, 211, 0.1)";
-      ctx.fillRect(-56, -66, 20, 132);
-    }
-
-    let browLift = -17;
+    let browLift = -15;
     let browTilt = 2.4;
-    let lidDrop = 0.4;
+    let lidDrop = 0.2;
     let mouthMode = "flat";
     if (expression === "glare") {
-      browLift = -19;
-      browTilt = 4.8;
-      lidDrop = 2;
-    } else if (expression === "smirk") {
       browLift = -17;
+      browTilt = 4.8;
+      lidDrop = 1.8;
+    } else if (expression === "smirk") {
+      browLift = -15;
       browTilt = 3.1;
-      lidDrop = 1.1;
+      lidDrop = 0.9;
       mouthMode = "smirk";
     } else if (expression === "amused") {
-      browLift = -15;
-      browTilt = 1.4;
-      lidDrop = -0.2;
+      browLift = -13;
+      browTilt = 1.2;
+      lidDrop = -0.3;
       mouthMode = "smile";
     }
 
-    ctx.strokeStyle = "rgba(48, 27, 27, 0.82)";
-    ctx.lineWidth = 1.9;
+    ctx.strokeStyle = "rgba(34, 18, 18, 0.78)";
+    ctx.lineWidth = 1.8;
     ctx.beginPath();
-    ctx.moveTo(-18, browLift + browTilt);
+    ctx.moveTo(-16, browLift + browTilt);
     ctx.lineTo(-4, browLift - browTilt);
     ctx.moveTo(4, browLift - browTilt);
-    ctx.lineTo(18, browLift + browTilt);
+    ctx.lineTo(16, browLift + browTilt);
     ctx.stroke();
 
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.32)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-10, -15);
+    ctx.quadraticCurveTo(-6, -17 + lidDrop, -1, -14.5);
+    ctx.moveTo(1, -14.5);
+    ctx.quadraticCurveTo(6, -17 + lidDrop, 10, -15);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(16, 18, 24, 0.86)";
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.ellipse(-10, -8.5, 6.8, 2.4 + lidDrop * 0.16, 0, Math.PI * 0.1, Math.PI * 0.92);
+    ctx.ellipse(10, -8.5, 6.8, 2.4 + lidDrop * 0.16, 0, Math.PI * 0.08, Math.PI * 0.9);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(97, 53, 43, 0.55)";
     ctx.lineWidth = 1.1;
     ctx.beginPath();
-    ctx.moveTo(-10, -16);
-    ctx.quadraticCurveTo(-6, -18 + lidDrop, -1, -15);
-    ctx.moveTo(1, -15);
-    ctx.quadraticCurveTo(6, -18 + lidDrop, 10, -16);
-    ctx.stroke();
-
-    ctx.strokeStyle = "rgba(19, 22, 28, 0.88)";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.ellipse(-10, -8.5, 6.8, 2.5 + lidDrop * 0.15, 0, Math.PI * 0.1, Math.PI * 0.92);
-    ctx.ellipse(10, -8.5, 6.8, 2.5 + lidDrop * 0.15, 0, Math.PI * 0.08, Math.PI * 0.9);
-    ctx.stroke();
-
-    ctx.strokeStyle = "rgba(87, 48, 39, 0.66)";
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
     ctx.moveTo(0, -2);
-    ctx.lineTo(-1.2, 9);
-    ctx.moveTo(-4, 10.5);
-    ctx.quadraticCurveTo(0, 13.2, 4, 10.5);
+    ctx.lineTo(-1.1, 8);
+    ctx.moveTo(-4, 9.8);
+    ctx.quadraticCurveTo(0, 12.2, 4, 9.8);
     ctx.stroke();
 
-    ctx.strokeStyle = mouthMode === "smile" ? "rgba(122, 68, 58, 0.88)" : "rgba(106, 59, 49, 0.84)";
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = mouthMode === "smile" ? "rgba(122, 68, 58, 0.9)" : "rgba(96, 54, 46, 0.84)";
+    ctx.lineWidth = 1.45;
     ctx.beginPath();
     if (mouthMode === "smile") {
-      ctx.moveTo(-6, 17);
-      ctx.quadraticCurveTo(0, 20.8, 6, 17.2);
+      ctx.moveTo(-5.6, 16.2);
+      ctx.quadraticCurveTo(0, 19.4, 5.8, 16.6);
     } else if (mouthMode === "smirk") {
-      ctx.moveTo(-6, 17.2);
-      ctx.quadraticCurveTo(-1, 18.1, 3, 17.6);
-      ctx.quadraticCurveTo(6.8, 16.4, 8.2, 14.5);
+      ctx.moveTo(-5.8, 16.8);
+      ctx.quadraticCurveTo(-1.2, 17.8, 2.5, 17.2);
+      ctx.quadraticCurveTo(6.6, 15.9, 8.2, 13.8);
     } else {
-      ctx.moveTo(-5.4, 17.4);
-      ctx.quadraticCurveTo(0, 16.6, 5.8, 17.1);
+      ctx.moveTo(-5.2, 16.9);
+      ctx.quadraticCurveTo(0, 16.2, 5.4, 16.8);
     }
-    ctx.stroke();
-
-    ctx.strokeStyle = "rgba(255, 228, 220, 0.24)";
-    ctx.beginPath();
-    ctx.moveTo(-4, 18.3);
-    ctx.lineTo(4, 17.9);
     ctx.stroke();
 
     if (boss.effectTimer > 0) {
       const sweep = 1 - boss.effectTimer / 0.95;
-      ctx.strokeStyle = `rgba(182, 226, 255, ${0.48 - sweep * 0.22})`;
-      ctx.lineWidth = 1.8;
+      ctx.strokeStyle = `rgba(182, 226, 255, ${0.46 - sweep * 0.22})`;
+      ctx.lineWidth = 1.7;
       ctx.beginPath();
-      ctx.moveTo(-28 + sweep * 32, -20);
-      ctx.lineTo(-10 + sweep * 32, 8);
-      ctx.stroke();
-      ctx.strokeStyle = `rgba(255, 186, 132, ${0.22 + boss.effectTimer * 0.12})`;
-      ctx.beginPath();
-      ctx.moveTo(-40, -32 + sweep * 18);
-      ctx.lineTo(40, -36 + sweep * 12);
+      ctx.moveTo(-24 + sweep * 28, -18);
+      ctx.lineTo(-8 + sweep * 28, 6);
       ctx.stroke();
     }
 
@@ -2421,22 +2141,21 @@
   function drawWinterBoss(x, y, boss, scale) {
     const expression = boss.expression || "smile";
     const portrait = getBossPortraitImage(boss);
-    const variant = boss.portraitVariant || "redWave";
     ctx.save();
-    ctx.translate(x, y + 12);
+    ctx.translate(x, y + 10);
     ctx.scale(scale, scale);
 
     ctx.fillStyle = "rgba(248, 190, 204, 0.16)";
     ctx.beginPath();
-    ctx.ellipse(0, 28, 32, 8.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 26, 26, 7.8, 0, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.save();
-    const pulseScale = 1 + boss.pulse * 0.045;
+    const pulseScale = 1 + boss.pulse * 0.04;
     ctx.scale(pulseScale, pulseScale);
 
     if (portrait && portrait.complete && portrait.naturalWidth > 0) {
-      ctx.drawImage(portrait, -56, -70, 112, 138);
+      ctx.drawImage(portrait, -41, -43, 82, 82);
     } else {
       const fallback = ctx.createLinearGradient(-24, -40, 24, 44);
       fallback.addColorStop(0, "#ffe8ea");
@@ -2447,112 +2166,90 @@
       ctx.fill();
     }
 
-    if (variant === "violetStage") {
-      for (let orb = 0; orb < 3; orb += 1) {
-        const orbX = -34 + orb * 28 + Math.sin(boss.floatTime + orb) * 2;
-        const orbY = -46 + orb * 11;
-        ctx.fillStyle = `rgba(255, 235, 255, ${0.08 + orb * 0.04})`;
-        ctx.beginPath();
-        ctx.arc(orbX, orbY, 10 + orb * 2, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    } else if (variant === "softBob") {
-      ctx.strokeStyle = "rgba(255, 121, 194, 0.35)";
-      ctx.lineWidth = 2.2;
+    for (let orb = 0; orb < 2; orb += 1) {
+      const orbX = -27 + orb * 54 + Math.sin(boss.floatTime + orb) * 1.8;
+      const orbY = -28 + orb * 8;
+      ctx.fillStyle = `rgba(255, 235, 255, ${0.08 + orb * 0.05})`;
       ctx.beginPath();
-      ctx.moveTo(-38, 38);
-      ctx.quadraticCurveTo(-16, 18, -4, 23);
-      ctx.moveTo(6, 22);
-      ctx.quadraticCurveTo(22, 16, 42, 36);
-      ctx.stroke();
-    } else {
-      ctx.fillStyle = "rgba(255, 245, 248, 0.12)";
-      ctx.fillRect(-54, -66, 18, 132);
+      ctx.arc(orbX, orbY, 8 + orb * 2, 0, Math.PI * 2);
+      ctx.fill();
     }
 
     function drawEye(centerX, open = 1, wink = false) {
       if (wink) {
-        ctx.strokeStyle = "rgba(87, 52, 48, 0.9)";
+        ctx.strokeStyle = "rgba(87, 52, 48, 0.88)";
         ctx.lineWidth = 1.8;
         ctx.beginPath();
-        ctx.moveTo(centerX - 5.6, -5);
-        ctx.quadraticCurveTo(centerX, -7.8, centerX + 5.6, -4.6);
+        ctx.moveTo(centerX - 5.5, -2.8);
+        ctx.quadraticCurveTo(centerX, -5.2, centerX + 5.5, -2.6);
         ctx.stroke();
         return;
       }
-      ctx.strokeStyle = "rgba(70, 42, 39, 0.96)";
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = "rgba(70, 42, 39, 0.92)";
+      ctx.lineWidth = 1.45;
       ctx.beginPath();
-      ctx.moveTo(centerX - 6.2, -8.6);
-      ctx.quadraticCurveTo(centerX, -11.2, centerX + 6.2, -8.1);
+      ctx.moveTo(centerX - 6, -6.5);
+      ctx.quadraticCurveTo(centerX, -8.8, centerX + 6, -6.2);
       ctx.stroke();
       ctx.strokeStyle = "rgba(255, 255, 255, 0.34)";
       ctx.beginPath();
-      ctx.moveTo(centerX - 5.4, -7.4);
-      ctx.quadraticCurveTo(centerX, -9 + open * 0.5, centerX + 5.4, -7.3);
+      ctx.moveTo(centerX - 5.1, -5.5);
+      ctx.quadraticCurveTo(centerX, -7 + open * 0.4, centerX + 5.1, -5.4);
       ctx.stroke();
     }
 
     let mouthMode = "smile";
     if (expression === "wink") {
-      drawEye(-11, 1, true);
-      drawEye(11, 1.02, false);
+      drawEye(-10, 1, true);
+      drawEye(10, 1.02, false);
     } else if (expression === "focus") {
-      drawEye(-11, 0.76, false);
-      drawEye(11, 0.76, false);
+      drawEye(-10, 0.74, false);
+      drawEye(10, 0.74, false);
       mouthMode = "flat";
     } else if (expression === "surprised") {
-      drawEye(-11, 1.12, false);
-      drawEye(11, 1.12, false);
+      drawEye(-10, 1.1, false);
+      drawEye(10, 1.1, false);
       mouthMode = "open";
     } else {
-      drawEye(-11, 1, false);
-      drawEye(11, 1, false);
+      drawEye(-10, 1, false);
+      drawEye(10, 1, false);
     }
 
-    ctx.strokeStyle = "rgba(113, 71, 64, 0.46)";
-    ctx.lineWidth = 1.1;
+    ctx.strokeStyle = "rgba(113, 71, 64, 0.42)";
+    ctx.lineWidth = 1.05;
     ctx.beginPath();
-    ctx.moveTo(0, -1);
-    ctx.lineTo(-1, 9.4);
-    ctx.moveTo(-3.3, 11.3);
-    ctx.quadraticCurveTo(0, 13.4, 3.3, 11.3);
+    ctx.moveTo(0, 0.5);
+    ctx.lineTo(-1, 9.2);
+    ctx.moveTo(-3.2, 10.8);
+    ctx.quadraticCurveTo(0, 12.6, 3.2, 10.8);
     ctx.stroke();
 
     ctx.strokeStyle = "rgba(242, 156, 179, 0.94)";
-    ctx.lineWidth = 1.7;
+    ctx.lineWidth = 1.6;
     ctx.beginPath();
     if (mouthMode === "open") {
-      ctx.ellipse(0, 19.8, 3.3, 4.2, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 17.4, 3.2, 4, 0, 0, Math.PI * 2);
     } else if (mouthMode === "flat") {
-      ctx.moveTo(-5.4, 18.8);
-      ctx.lineTo(5.4, 18.8);
+      ctx.moveTo(-5.2, 16.6);
+      ctx.lineTo(5.2, 16.6);
     } else {
-      ctx.moveTo(-5.8, 18.2);
-      ctx.quadraticCurveTo(0, 21.8, 5.8, 18.2);
+      ctx.moveTo(-5.6, 16.1);
+      ctx.quadraticCurveTo(0, 19, 5.6, 16.1);
     }
     ctx.stroke();
 
-    ctx.strokeStyle = "rgba(255, 247, 250, 0.64)";
-    ctx.lineWidth = 1.1;
+    ctx.strokeStyle = "rgba(255, 247, 250, 0.62)";
+    ctx.lineWidth = 1.05;
     ctx.beginPath();
-    ctx.moveTo(-2, 18.6);
-    ctx.lineTo(3, 19.2);
+    ctx.moveTo(-1.8, 16.6);
+    ctx.lineTo(2.8, 17.1);
     ctx.stroke();
-
-    ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
-    ctx.beginPath();
-    ctx.arc(-21, -1, 1.4, 0, Math.PI * 2);
-    ctx.arc(21, -1, 1.4, 0, Math.PI * 2);
-    ctx.fill();
 
     if (boss.effectTimer > 0) {
       const alpha = 0.28 + boss.effectTimer * 0.16;
-      drawSparkle(-34, -20, 5.6, `rgba(255, 231, 238, ${alpha})`, boss.floatTime * 0.6);
-      drawSparkle(34, -7, 4.9, `rgba(255, 231, 238, ${alpha})`, -boss.floatTime * 0.74);
-      if (variant === "softBob") {
-        drawSparkle(0, -42, 5.1, `rgba(255, 171, 215, ${alpha * 0.9})`, boss.floatTime * 0.4);
-      }
+      drawSparkle(-30, -18, 5.4, `rgba(255, 231, 238, ${alpha})`, boss.floatTime * 0.6);
+      drawSparkle(30, -7, 4.8, `rgba(255, 231, 238, ${alpha})`, -boss.floatTime * 0.74);
+      drawSparkle(0, -34, 4.9, `rgba(255, 171, 215, ${alpha * 0.88})`, boss.floatTime * 0.4);
     }
 
     ctx.restore();
